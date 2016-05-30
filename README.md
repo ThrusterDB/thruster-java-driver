@@ -1,2 +1,2 @@
 # thruster-java-driver
-Java driver for the ThrusterDB graph database.
+Java driver for the TruenoDB graph database.
