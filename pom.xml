@@ -10,6 +10,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.jdeferred</groupId>
+            <artifactId>jdeferred-core</artifactId>
+            <version>1.2.4</version>
+        </dependency>
+        <dependency>
             <groupId>com.corundumstudio.socketio</groupId>
             <artifactId>netty-socketio</artifactId>
             <version>1.7.7</version>
