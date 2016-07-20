@@ -1,8 +1,16 @@
 package org.trueno.driver.lib.core.communication;
 
-import com.corundumstudio.socketio.SocketIOClient;
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.Ack;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+import org.jdeferred.Deferred;
+import org.jdeferred.Promise;
+import org.jdeferred.impl.DeferredObject;
+import org.json.JSONObject;
+
+import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -14,10 +22,10 @@ public class RPC {
     private String host;
     private int port;
     private HashMap<String, Method> procedures;
-    private SocketIOClient socket;
+    private Socket socket;
 
     /* Default Constructor */
-    public RPC(){
+    public RPC() {
 
         /* Set default properties */
         this.host = "http://localhost";
@@ -25,13 +33,14 @@ public class RPC {
         this.procedures = new HashMap<String, Method>();
         this.socket = null;
     }
+
     /* Constructor with Parameters */
-    public RPC(String host, Integer port){
+    public RPC(String host, Integer port) {
 
         /* calling default constructor */
         this();
         /* Set parameters */
-        this.host  = host != null ? host : this.host;
+        this.host = host != null ? host : this.host;
         this.port = port != null ? port : this.port;
     }
 
@@ -41,16 +50,53 @@ public class RPC {
         this.procedures.put(procedureName, procedureFunction);
     }
 
-    public void call() {
+
+    public Promise call(final String method, final JSONObject arg) {
 
 
+        /* This object reference */
+        final RPC self = this;
+
+        /* Instantiating deferred object */
+        final Deferred deferred = new DeferredObject();
+        /* Extracting promise */
+        Promise promise = deferred.promise();
+        /* Sending event */
+        self.socket.emit(method, arg, new Ack() {
+            public void call(Object... objects) {
+                deferred.resolve("done");
+            }
+        });
+
+        return promise;
     }
 
-    public void connect() {
+    public void connect(final Callback connCallback, final Callback discCallback) {
 
 
+        /* This object reference */
+        final RPC self = this;
+
+        /* instantiating the socket */
+        try {
+            this.socket = IO.socket(this.host+":"+this.port );
+        } catch (URISyntaxException e) {
+            System.out.println(e);
+        }
+
+        this.socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+            public void call(Object... args) {
+                connCallback.method(self.socket);
+            }
+        }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+            public void call(Object... args) {
+                discCallback.method(self.socket);
+            }
+        });
+
+        /* Connecting Socket */
+        this.socket.connect();
     }
-
 
 
 }
