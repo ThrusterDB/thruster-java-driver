@@ -12,5 +12,8 @@
 hs_err_pid*
 
 #IDE
-.idea
+.idea/
+*.iml
 
+#Maven
+target/
