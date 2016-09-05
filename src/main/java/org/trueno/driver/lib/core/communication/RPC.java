@@ -64,7 +64,7 @@ public class RPC {
         /* Sending event */
         self.socket.emit(method, arg, new Ack() {
             public void call(Object... objects) {
-                deferred.resolve("done");
+                deferred.resolve(objects);
             }
         });
 

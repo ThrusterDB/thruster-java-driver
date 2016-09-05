@@ -39,7 +39,8 @@ public class Component extends JSONObject {
         }
     }
 
-    /* Getters */
+    /*====================== Getters ======================*/
+
     public String getGraphid() {
         try {
             return (String) ((JSONObject) this.get("_property")).get("_graphid");
@@ -96,7 +97,8 @@ public class Component extends JSONObject {
         return null;
     }
 
-    /* Setters */
+    /*====================== Setters ======================*/
+
     public void setGraphid(String graphid) {
         try {
            ((JSONObject) this.get("_property")).put("_graphid",graphid);

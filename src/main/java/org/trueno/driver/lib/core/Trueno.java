@@ -2,7 +2,10 @@ package org.trueno.driver.lib.core;
 
 
 import com.github.nkzawa.engineio.client.Socket;
+import org.jdeferred.Deferred;
+import org.jdeferred.DoneCallback;
 import org.jdeferred.Promise;
+import org.jdeferred.impl.DeferredObject;
 import org.trueno.driver.lib.core.communication.Callback;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
@@ -62,7 +65,8 @@ public class Trueno {
             }
         });
     }
-    /********************************* GRAPH EXTERNAL API METHODS *********************************/
+
+    /*================================ GRAPH EXTERNAL API METHODS ================================*/
 
     public Promise createGraph(Graph g) {
 
@@ -132,6 +136,35 @@ public class Trueno {
 
         /* return promise with the async operation */
         return this.rpc.call("ex_getGraphList", msg);
+
+//        return new Promise((resolve, reject) => {
+//        this._rpc.call('ex_getGraphList', msg).then(msg => {
+//                let gl = [];
+//        if (msg._payload.code == 0) {
+//            let list = msg._payload.result;
+//            for (var i = 0; i < list.length; i++) {
+//                let g = new Graph();
+//                utils.datatoComponent(list[i], g);
+//                gl.push(g);
+//            }
+//            resolve(gl);
+//        }
+//      }).catch(e => {
+//                reject(e);
+//      });
+//    });
+
+//        /* Instantiating deferred object */
+//        final Deferred deferred = new DeferredObject();
+//        /* Extracting promise */
+//        Promise promise = deferred.promise();
+//
+//        /* return promise with the async operation */
+//        this.rpc.call("ex_getGraphList", msg).then((DoneCallback) (obj) -> {
+//
+//
+//
+//        });
 
     }
 
