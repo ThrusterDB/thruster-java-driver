@@ -20,6 +20,7 @@ import org.trueno.driver.lib.core.data_structures.Vertex;
 public class Trueno {
 
     /* Private properties */
+    private boolean debug;
     private String host;
     private int port;
     private RPC rpc;
@@ -64,6 +65,30 @@ public class Trueno {
                 discCallback.method(socket);
             }
         });
+    }
+
+
+    /**
+     * Creates a new graph instance related with this connection.
+     *
+     * @param label The graph label.
+     * @return A new Graph.
+     */
+    public Graph Graph(String label) {
+        return new Graph();
+    }
+
+
+    /*********************** REMOTE OPERATIONS ***********************/
+    /**
+     * Execute SQL query in the backend.
+     *
+     * @param query The sql query to be executed in the backend.
+     * @return Promise with the SQL operations results.
+     */
+    public Promise sql(String query) {
+
+        return null;
     }
 
     /*================================ GRAPH EXTERNAL API METHODS ================================*/

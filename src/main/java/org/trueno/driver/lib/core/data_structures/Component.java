@@ -14,61 +14,109 @@ import java.util.Map;
  */
 public class Component extends JSONObject {
 
+    private boolean type;
+    private Graph parentGraph;
+    private boolean debug;
 
     public Component() {
 
         try {
-            /* Setting internal fields */
-            this.put("_internal", new HashMap());
-            ((JSONObject) this.get("_internal")).put("modified", new HashMap());
-            ((JSONObject) this.get("_internal")).put("fields", new HashMap());
+
+            /* setting id */
+            this.put("id", "");
+            /* setting label */
+            this.put("label","");
 
             /* Setting property fields */
-            this.put("_property", new HashMap());
-            ((JSONObject) this.get("_property")).put("_id", "");
-            ((JSONObject) this.get("_property")).put("_graphid", "");
-
-            /* Set the attributes, computed, and meta fields */
-            ((JSONObject) this.get("_property")).put("_attributes", new HashMap());
-            ((JSONObject) this.get("_property")).put("_computed", new HashMap<String, HashMap>());
-            ((JSONObject) this.get("_property")).put("_meta", new HashMap());
-
+            this.put("prop", new HashMap());
+            /* Setting computed fields */
+            this.put("computed", new HashMap());
+            /* Setting meta fields */
+            this.put("meta", new HashMap());
 
         } catch (JSONException e) {
             System.out.println(e);
         }
     }
 
-    /*====================== Getters ======================*/
-
-    public String getGraphid() {
-        try {
-            return (String) ((JSONObject) this.get("_property")).get("_graphid");
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-        return null;
-    }
+      /*======================== GETTERS & SETTERS =======================*/
 
     public String getId() {
+
+        try{
+            String s = this.get("id").toString();
+            return (s.isEmpty())? null: s;
+        } catch (JSONException e) {
+            System.out.println(e);
+        }
+
+        return null;
+    }
+
+    public void setId(String value) {
+        try{
+            this.put("id", value);
+        } catch (JSONException e) {
+            System.out.println(e);
+        }
+    }
+
+    public String getLabel() {
+        try{
+            String s = this.get("label").toString();
+            return (s.isEmpty())? null: s;
+        } catch (JSONException e) {
+            System.out.println(e);
+        }
+
+        return null;
+    }
+
+    public void setLabel(String value) {
+        try{
+            this.put("label", value);
+        } catch (JSONException e) {
+            System.out.println(e);
+        }
+    }
+
+/*=========================== PROPERTIES ===========================*/
+
+    public HashMap properties() {
+
         try {
-            return (String) ((JSONObject) this.get("_property")).get("_id");
+            return (HashMap)this.get("prop");
         } catch (JSONException e) {
             System.out.println(e);
         }
         return null;
     }
 
-    public HashMap getAttributes() {
-
+    public void setProperty(String prop, Object value) {
         try {
-            return (HashMap) ((JSONObject) this.get("_property")).get("_attributes");
+            ((HashMap)this.get("prop")).put(prop,value);
         } catch (JSONException e) {
             System.out.println(e);
         }
-        return null;
-
     }
+
+    getProperty(prop) {
+    /* validating the prop type */
+        this._validatePropAndVal(prop, '');
+    /* getting the property */
+        return this._prop[prop]
+    }
+
+    removeProperty(prop) {
+
+    /* validating the prop type */
+        this._validatePropAndVal(prop, '');
+    /* Removing the property */
+        delete this._prop[prop];
+    }
+
+
+
 
     public HashMap getComputed() {
         try {
@@ -98,22 +146,6 @@ public class Component extends JSONObject {
     }
 
     /*====================== Setters ======================*/
-
-    public void setGraphid(String graphid) {
-        try {
-           ((JSONObject) this.get("_property")).put("_graphid",graphid);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void setId(String id) {
-        try {
-            ((JSONObject) this.get("_property")).put("_id", id);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
 
     public void setAttributes(HashMap attributes) {
 
