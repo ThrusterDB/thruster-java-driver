@@ -67,7 +67,50 @@ public class Trueno {
         });
     }
 
+      /*======================== GETTERS & SETTERS =======================*/
 
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public RPC getRpc() {
+        return rpc;
+    }
+
+    public void setRpc(RPC rpc) {
+        this.rpc = rpc;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
+    }
+
+
+     /*======================== MIX METHODS =======================*/
     /**
      * Creates a new graph instance related with this connection.
      *
@@ -75,7 +118,13 @@ public class Trueno {
      * @return A new Graph.
      */
     public Graph Graph(String label) {
-        return new Graph();
+
+        Graph g = new Graph();
+        g.setConn(this.rpc);
+        g.setDebug(this.debug);
+        g.setLabel(label);
+
+        return g;
     }
 
 

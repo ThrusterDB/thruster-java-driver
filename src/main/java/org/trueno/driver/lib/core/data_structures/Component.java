@@ -1,6 +1,7 @@
 package org.trueno.driver.lib.core.data_structures;
 
 import javafx.util.Pair;
+import org.jdeferred.Promise;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,25 +15,26 @@ import java.util.Map;
  */
 public class Component extends JSONObject {
 
-    private boolean type;
+    private String ref;
+    private String type;
     private Graph parentGraph;
     private boolean debug;
 
     public Component() {
 
+        /* Initialize JSON properties */
         try {
-
             /* setting id */
             this.put("id", "");
             /* setting label */
             this.put("label","");
 
             /* Setting property fields */
-            this.put("prop", new HashMap());
+            this.put("prop", new JSONObject());
             /* Setting computed fields */
-            this.put("computed", new HashMap());
+            this.put("comp", new JSONObject());
             /* Setting meta fields */
-            this.put("meta", new HashMap());
+            this.put("meta", new JSONObject());
 
         } catch (JSONException e) {
             System.out.println(e);
@@ -80,222 +82,125 @@ public class Component extends JSONObject {
         }
     }
 
+    public void setType(String type){
+        this.type = type;
+    }
+
+    public String getType(){
+        return this.type;
+    }
+
+    public void setParentGraph(Graph g){
+        this.parentGraph = g;
+    }
+
+    public Graph getParentGraph(){
+        return this.parentGraph;
+    }
+
+    public void setDebug(boolean debug){
+        this.debug = debug;
+    }
+
+    public boolean getDebug(){
+        return this.debug;
+    }
+
+
 /*=========================== PROPERTIES ===========================*/
 
-    public HashMap properties() {
+    public JSONObject properties() {
 
         try {
-            return (HashMap)this.get("prop");
+            return (JSONObject)this.get("prop");
         } catch (JSONException e) {
             System.out.println(e);
         }
         return null;
     }
 
-    public void setProperty(String prop, Object value) {
+    public boolean setProperty(String prop, Object value) {
         try {
-            ((HashMap)this.get("prop")).put(prop,value);
+            ((JSONObject)this.get("prop")).put(prop,value);
         } catch (JSONException e) {
             System.out.println(e);
+            return false;
         }
+        return true;
     }
 
-    getProperty(prop) {
-    /* validating the prop type */
-        this._validatePropAndVal(prop, '');
-    /* getting the property */
-        return this._prop[prop]
-    }
-
-    removeProperty(prop) {
-
-    /* validating the prop type */
-        this._validatePropAndVal(prop, '');
-    /* Removing the property */
-        delete this._prop[prop];
-    }
-
-
-
-
-    public HashMap getComputed() {
+    public Object getProperty(String prop) {
         try {
-            return (HashMap) ((JSONObject) this.get("_property")).get("_computed");
+            return ((JSONObject) this.get("prop")).get(prop);
         } catch (JSONException e) {
             System.out.println(e);
         }
         return null;
     }
 
-    public HashMap getMeta() {
-        try {
-            return (HashMap) ((JSONObject) this.get("_property")).get("_meta");
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-        return null;
-    }
-
-    public HashMap getFields() {
-        try {
-            return (HashMap) ((JSONObject) this.get("_internal")).get("fields");
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-        return null;
-    }
-
-    /*====================== Setters ======================*/
-
-    public void setAttributes(HashMap attributes) {
-
-        try {
-           ((JSONObject) this.get("_property")).put("_attributes",attributes);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void getComputed(HashMap computed) {
-        try {
-            ((JSONObject) this.get("_property")).put("_computed",computed);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void setMeta(HashMap meta) {
-        try {
-           ((JSONObject) this.get("_property")).put("_meta", meta);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void setFields(HashMap fields) {
-        try {
-            ((JSONObject) this.get("_internal")).put("fields",fields);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-     /*====================== ATTRIBUTES ======================*/
-
-    /* Attributes collection methods */
-    public void setAttribute(String attr, Object value) {
-
-        try {
-            this.mark("_attributes");
-            /* Adding the attribute */
-            ((JSONObject)((JSONObject) this.get("_property")).get("_attributes")).put(attr,value);
-
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-    public Object getAttribute(String attr) {
-
-        try {
-            /* returning the attribute */
-           return  ((HashMap)((JSONObject) this.get("_property")).get("_attributes")).get(attr);
-
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-
-        return null;
-    }
-
-    public void removeAttribute(String attr) {
-
+    public boolean removeProperty(String prop) {
         try {
             /* Removing the attribute */
-            ((HashMap)((JSONObject) this.get("_property")).get("_attributes")).remove(attr);
+            ((JSONObject) this.get("prop")).remove(prop);
+        } catch (JSONException e) {
+            System.out.println(e);
+            return false;
+        }
+        return true;
+    }
 
+    /*============================ COMPUTED ============================*/
+
+    public JSONObject computed() {
+        try {
+            return (JSONObject)this.get("comp");
         } catch (JSONException e) {
             System.out.println(e);
         }
-    }
-
-    /*====================== COMPUTED ======================*/
-
-    /* Attributes collection methods */
-    public void setComputedAlgorithm(String algo) {
-
-        try {
-            /* Marking as modified */
-            this.mark("_computed");
-            /* if algo attribute exist */
-            if(((HashMap)((JSONObject) this.get("_property")).get("_computed")).containsKey(algo)){
-                throw new Exception("Provided algorithm(" + algo + ") is already present");
-            }
-            /* adding the computed algorithm */
-            ((HashMap)((JSONObject) this.get("_property")).get("_computed")).put(algo,new HashMap());
-
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    public HashMap getComputedAlgorithm(String algo) {
-
-        try {
-            /* returning the attribute */
-            return  (HashMap)((HashMap)((JSONObject) this.get("_property")).get("_computed")).get(algo);
-
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-
         return null;
     }
 
-    public void removeComputedAlgorithm(String algo) {
+
+    /* Computed collection methods */
+    public boolean setComputed(String algo, String prop,  Object value) {
 
         try {
-            /* if algo attribute exist */
-            if(!((HashMap)((JSONObject) this.get("_property")).get("_computed")).containsKey(algo)){
-                throw new Exception("Provided algorithm(" + algo + ") is not present");
-            }
-            /* adding the computed algorithm */
-            ((HashMap)((JSONObject) this.get("_property")).get("_computed")).remove(algo);
 
-        } catch (Exception e) {
+            JSONObject comp = (JSONObject)this.get("comp");
+
+             /* if algo property does not exist, create it */
+            if (!comp.has(algo)) {
+                comp.put(algo,  new JSONObject());
+            }
+
+            /* Adding computed property */
+            ((JSONObject)comp.get(algo)).put(prop, value);
+
+            return true;
+
+        } catch (JSONException e) {
             System.out.println(e);
         }
+        return false;
+
     }
 
-    /* Attributes collection methods */
-    public void setComputedAttribute(String algo, String attr, Object value) {
+    public Object getComputed(String algo, String prop) {
 
         try {
-            /* Marking as modified */
-            this.mark("_computed");
-            /* if algo attribute exist */
-            if(!((HashMap)((JSONObject) this.get("_property")).get("_computed")).containsKey(algo)){
-                /* adding the computed algorithm */
-                ((HashMap)((JSONObject) this.get("_property")).get("_computed")).put(algo,new HashMap());
+
+            JSONObject comp = (JSONObject)this.get("comp");
+
+             /* if algo not present, throw error */
+            if (!comp.has(algo)) {
+                throw new Error("Provided algorithm(" + algo + ") is not present");
             }
-            /* Setting attribute */
-            ((HashMap)((HashMap)((JSONObject) this.get("_property")).get("_computed")).get(algo)).put(attr,value);
-
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    public HashMap getComputedAttribute(String algo, String attr) {
-
-        try {
-            /* if algo attribute exist */
-            if(!((HashMap)((JSONObject) this.get("_property")).get("_computed")).containsKey(algo)){
-                throw new Exception("Provided algorithm(" + algo + ") is not present");
+            if (!((JSONObject)comp.get(algo)).has(prop)) {
+                throw new Error("Provided algorithm property(" + prop + ") is not present");
             }
 
-            /* returning algorithm's computed attribute */
-            ((HashMap)((HashMap)((JSONObject) this.get("_property")).get("_computed")).get(algo)).get(attr);
+            /* return property of this algorithm */
+            return ((JSONObject)comp.get(algo)).get(prop);
 
         } catch (Exception e) {
             System.out.println(e);
@@ -304,112 +209,92 @@ public class Component extends JSONObject {
         return null;
     }
 
-    public void removeComputedAlgorithm(String algo, String attr) {
+    public boolean removeComputed(String algo, String prop) {
 
         try {
-            /* if algo attribute exist */
-            if(!((HashMap)((JSONObject) this.get("_property")).get("_computed")).containsKey(algo)){
-                throw new Exception("Provided algorithm(" + algo + ") is not present");
+
+            JSONObject comp = (JSONObject)this.get("comp");
+
+             /* if algo not present, throw error */
+            if (!comp.has(algo)) {
+                throw new Error("Provided algorithm(" + algo + ") is not present");
             }
-            /* removing algorithm's computed attribute */
-            ((HashMap)((HashMap)((JSONObject) this.get("_property")).get("_computed")).get(algo)).remove(attr);
+            if (!((JSONObject)comp.get(algo)).has(prop)) {
+                throw new Error("Provided algorithm property(" + prop + ") is not present");
+            }
+
+            ((JSONObject)comp.get(algo)).remove(prop);
+
+            return true;
 
         } catch (Exception e) {
             System.out.println(e);
         }
+
+        return false;
     }
+/*=========================== META ===========================*/
 
-    /*====================== META ======================*/
-
-    /* Attributes collection methods */
-    public void setMetaAttribute(String attr, Object value) {
+    public HashMap meta() {
 
         try {
-            this.mark("_meta");
-            /* Adding the attribute */
-            ((HashMap)((JSONObject) this.get("_property")).get("_meta")).put(attr,value);
-
+            return (HashMap)this.get("meta");
         } catch (JSONException e) {
             System.out.println(e);
         }
-    }
-
-    public Object getMetaAttribute(String attr) {
-
-        try {
-            /* returning the attribute */
-            return  ((HashMap)((JSONObject) this.get("_property")).get("_meta")).get(attr);
-
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-
         return null;
     }
 
-    public void removeMetaAttribute(String attr) {
-
+    public Object getMeta(String prop) {
         try {
-            /* Removing the attribute */
-            ((HashMap)((JSONObject) this.get("_property")).get("_meta")).remove(attr);
-
+            return ((JSONObject) this.get("meta")).get(prop);
         } catch (JSONException e) {
             System.out.println(e);
         }
+        return null;
     }
 
-    /*====================== OPERATIONS ======================*/
+    /*======================== REMOTE OPERATIONS =======================*/
 
-    public void clear() {
-        try {
-            ((JSONObject) this.get("_internal")).put("modified", new HashMap());
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
+    /**
+     * Persist the component changes in the remote database.
+     *
+     * @return
+     */
+    public Promise persist() {
 
-    public void mark(String id){
-        try {
-            ((JSONObject)((JSONObject) this.get("_internal")).get("modified")).put(id,0);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void setMapping(String id, HashMap map) {
-        try {
-            ((HashMap)((JSONObject) this.get("_internal")).get("fields")).put(id,map);
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
-    }
-
-
-    public ArrayList<Pair<String,HashMap>> flush() {
-
-        try {
-            HashMap modified = ((HashMap)((JSONObject) this.get("_internal")).get("modified"));
-            ArrayList<Pair<String, HashMap>> pairs =  new ArrayList<Pair<String, HashMap>>();
-
-            Iterator it = modified.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pair = (Map.Entry)it.next();
-                String key = (String)pair.getKey();
-                HashMap x = (HashMap)pair.getValue();
-
-                if(x != null){
-                    pairs.add(new Pair<String, HashMap>(key,x));
-                }
-            }
-
-            this.clear();
-            return pairs;
-
-        } catch (JSONException e) {
-            System.out.println(e);
-        }
 
         return null;
     }
+    /**
+     * Destroy component(s) at the remote database.
+     *
+     * @param cmp   Component to be destroyed.
+     * @param ftr   Filter to be applied.
+     * @return      Promise with the async destruction result.
+     */
+    public Promise destroy(String cmp, Filter ftr) {
+
+        return null;
+    }
+    /**
+     * Overload method for destroy.
+     *
+     * @param cmp   Component to be destroyed.
+     * @return      Promise with the async destruction result.
+     */
+    public Promise destroy(String cmp) {
+        return this.destroy(cmp, null);
+    }
+    /**
+     * Overload method for destroy.
+     *
+     * @return      Promise with the async destruction result.
+     */
+    public Promise destroy() {
+        return this.destroy(null, null);
+    }
+
+
 
 }

@@ -7,6 +7,7 @@ import com.github.nkzawa.socketio.client.Socket;
 import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
@@ -64,7 +65,24 @@ public class RPC {
         /* Sending event */
         self.socket.emit(method, arg, new Ack() {
             public void call(Object... objects) {
-                deferred.resolve(objects);
+
+                /* casting json object */
+                JSONObject args = (JSONObject) objects[0];
+
+                /* checking the result and resolving or rejecting */
+                try {
+                    JSONObject value = new JSONObject();
+                    value.put("result", args.get("_payload"));
+
+                    if (args.get("_status").toString().equals(Status.SUCCESS.toString())) {
+                        deferred.resolve(value);
+                    } else if (args.get("_status").toString().equals(Status.ERROR.toString())) {
+                        deferred.reject(value);
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -79,7 +97,7 @@ public class RPC {
 
         /* instantiating the socket */
         try {
-            this.socket = IO.socket(this.host+":"+this.port );
+            this.socket = IO.socket(this.host + ":" + this.port);
         } catch (URISyntaxException e) {
             System.out.println(e);
         }
