@@ -5,10 +5,8 @@ import org.jdeferred.Promise;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by victor on 7/19/16.
@@ -21,6 +19,9 @@ public class Component extends JSONObject {
     private boolean debug;
 
     public Component() {
+
+        /* set UUID */
+        this.ref = UUID.randomUUID().toString();
 
         /* Initialize JSON properties */
         try {
@@ -80,6 +81,10 @@ public class Component extends JSONObject {
         } catch (JSONException e) {
             System.out.println(e);
         }
+    }
+
+    public String getRef(){
+        return this.ref;
     }
 
     public void setType(String type){
@@ -254,6 +259,17 @@ public class Component extends JSONObject {
         return null;
     }
 
+    /*=========================== VALIDATION ===========================*/
+    public void validateGraphLabel() {
+        /* If label is not present throw error */
+        if (this.parentGraph.getLabel().isEmpty()) {
+            throw new Error("Graph label is required");
+        }
+        /* If label is not present throw error */
+        if (this.type.equals("g")) {
+            this.setId(this.getLabel());
+        }
+    }
     /*======================== REMOTE OPERATIONS =======================*/
 
     /**
@@ -295,6 +311,15 @@ public class Component extends JSONObject {
         return this.destroy(null, null);
     }
 
-
+    /**
+     * Validate component.
+     * @param {string} [cmp] - The component type, can be 'v','V', 'e','E', 'g', or 'G'
+     */
+    public void validateCmp(String cmp) {
+        Pattern.compile("v|V|e|E|g|G");
+        if (!Pattern.compile("v|V|e|E|g|G").matcher(cmp).find()){
+            throw new Error("Component must be one of the following: 'g', 'G', v','V', 'e','E', provided value: " + cmp);
+        }
+    }
 
 }
