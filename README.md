@@ -1,4 +1,4 @@
-# thruster-java-driver
+# TruenoDB-Java-Driver
 Java driver for the TruenoDB graph database.
 
 To build:

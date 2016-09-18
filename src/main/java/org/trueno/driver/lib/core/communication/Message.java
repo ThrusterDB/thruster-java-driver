@@ -6,9 +6,10 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 /**
- * Created by victor on 5/10/16.
+ * Created by: victor
+ * Date: 5/10/16
+ * Purpose:
  */
-
 
 public class Message extends JSONObject {
 

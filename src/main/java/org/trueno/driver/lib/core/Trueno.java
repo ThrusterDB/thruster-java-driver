@@ -6,8 +6,11 @@ import org.trueno.driver.lib.core.communication.RPC;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
 /**
- * Created by victor on 7/19/16.
+ * Created by: victor
+ * Date: 7/19/16
+ * Purpose:
  */
+
 public class Trueno {
 
     /* Private properties */
@@ -45,20 +48,16 @@ public class Trueno {
         final Trueno self = this;
 
         /* Connect the rpc object */
-        this.rpc.connect(new Callback() {
-            public void method(com.github.nkzawa.socketio.client.Socket socket) {
-                self.isConnected = true;
-                connCallback.method(socket);
-            }
-        }, new Callback() {
-            public void method(com.github.nkzawa.socketio.client.Socket socket) {
-                self.isConnected = false;
-                discCallback.method(socket);
-            }
+        this.rpc.connect(socket -> {
+            self.isConnected = true;
+            connCallback.method(socket);
+        }, socket -> {
+            self.isConnected = false;
+            discCallback.method(socket);
         });
     }
 
-      /*======================== GETTERS & SETTERS =======================*/
+    /*======================== GETTERS & SETTERS =======================*/
 
     public boolean isDebug() {
         return debug;
@@ -119,7 +118,7 @@ public class Trueno {
     }
 
 
-    /*********************** REMOTE OPERATIONS ***********************/
+    /*------------------- REMOTE OPERATIONS ----------------------*/
     /**
      * Execute SQL query in the backend.
      *

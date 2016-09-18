@@ -15,8 +15,11 @@ import java.util.HashMap;
 import java.lang.reflect.Method;
 
 /**
- * Created by victor on 7/19/16.
+ * Created by: victor
+ * Date: 7/19/16
+ * Purpose:
  */
+
 public class RPC {
 
     /* Private properties */

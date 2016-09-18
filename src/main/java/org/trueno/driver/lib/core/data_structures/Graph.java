@@ -16,8 +16,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Created by victor on 7/19/16.
+ * Created by: victor
+ * Date: 7/19/16
+ * Purpose:
  */
+
 public class Graph extends Component {
 
     private RPC conn;
@@ -28,15 +31,13 @@ public class Graph extends Component {
 
     /* invoke super constructor */
     public Graph() {
-        super();
-
         /* init bulk operations */
         this.bulkOperations = new ArrayList<JSONObject>();
+
         /* setting supper properties */
         this.setType("g");
         this.setParentGraph(this);
         this.setDebug(false);
-
     }
 
     /*======================== GETTERS & SETTERS =======================*/
@@ -66,8 +67,10 @@ public class Graph extends Component {
     }
 
     /*======================== OPERATIONS =======================*/
+
     /**
      * Creates a new filter to be applied to corresponding operations.
+     *
      * @return The new filter instance.
      */
     public Filter filter() {
@@ -76,7 +79,8 @@ public class Graph extends Component {
 
     /**
      * Creates a new vertex associated with this graph.
-     * @return  The new vertex.
+     *
+     * @return The new vertex.
      */
     public Vertex addVertex() {
 
@@ -84,13 +88,14 @@ public class Graph extends Component {
         v.setDebug(this.getDebug());
         v.setParentGraph(this);
         /* adding vertex to the collection */
-        this.vertices.put(v.getRef(),v);
+        this.vertices.put(v.getRef(), v);
 
         return v;
     }
 
     /**
      * Creates a new edge associated with this graph.
+     *
      * @return The new edge.
      */
     public Edge addEdge() {
@@ -99,7 +104,7 @@ public class Graph extends Component {
         e.setDebug(this.getDebug());
         e.setParentGraph(this);
         /* adding edge to the collection */
-        this.edges.put(e.getRef(),e);
+        this.edges.put(e.getRef(), e);
 
         return e;
     }
@@ -113,6 +118,7 @@ public class Graph extends Component {
 
     /**
      * Submit the batch operation in bulk into the database.
+     *
      * @return Promise with the bulk operations results.
      */
     public Promise closeBatch() {
@@ -121,8 +127,9 @@ public class Graph extends Component {
 
     /**
      * Pushes the operation string and parameter into the bulk list.
-     * @param op   The operation to be inserted into the bulk list.
-     * @param obj  The operation object.
+     *
+     * @param op  The operation to be inserted into the bulk list.
+     * @param obj The operation object.
      */
     public void pushOperation(String op, JSONObject obj) {
 
@@ -139,15 +146,19 @@ public class Graph extends Component {
     }
 
     /*======================== REMOTE OPERATIONS =======================*/
+
     /**
      * Fetchs components from Elastic Search.
+     *
      * @return The requested instantiated set of components.
      */
-    public Promise fetch(String cmp){
+    public Promise fetch(String cmp) {
         return this.fetch(cmp, null);
     }
+
     /**
      * Fetchs components from Elastic Search.
+     *
      * @return The requested instantiated set of components.
      */
     public Promise fetch(String cmp, Filter ftr) {
@@ -337,23 +348,19 @@ public class Graph extends Component {
         /* Extracting promise */
         Promise promise = deferred.promise();
 
-        this.conn.call(apiFunc, msg).then(new DoneCallback() {
-            public void onDone(Object o) {
-                try {
-                    JSONObject msg = (JSONObject) o;
-                    deferred.resolve(msg);
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
+        this.conn.call(apiFunc, msg).then(o -> {
+            try {
+                JSONObject msg1 = (JSONObject) o;
+                deferred.resolve(msg1);
+            } catch (Exception e) {
+                System.out.println(e);
             }
-        }, new FailCallback() {
-            public void onFail(Object o) {
-                try {
-                    JSONObject msg = (JSONObject) o;
-                    deferred.reject(msg);
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
+        }, o -> {
+            try {
+                JSONObject msg12 = (JSONObject) o;
+                deferred.reject(msg12);
+            } catch (Exception e) {
+                System.out.println(e);
             }
         });
 
@@ -395,7 +402,7 @@ public class Graph extends Component {
         Promise promise = deferred.promise();
 
         /* if no bulk operations return deferred now */
-        if(this.bulkOperations.size() == 0){
+        if (this.bulkOperations.size() == 0) {
 
             JSONObject json = new JSONObject();
             try {

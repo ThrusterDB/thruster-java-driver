@@ -1,12 +1,8 @@
 package org.trueno.driver.lib.core.communication;
 
-/**
- * Created by victor on 9/6/16.
- */
-public enum Status {
+enum Status {
     SUCCESS("success"),
-    ERROR("error")
-    ;
+    ERROR("error");
 
     private final String text;
 
