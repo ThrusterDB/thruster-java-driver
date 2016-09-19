@@ -1,9 +1,10 @@
 package org.trueno.driver.lib.core;
 
-import org.jdeferred.Promise;
 import org.trueno.driver.lib.core.communication.Callback;
 import org.trueno.driver.lib.core.communication.RPC;
 import org.trueno.driver.lib.core.data_structures.Graph;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by: victor
@@ -125,7 +126,7 @@ public class Trueno {
      * @param query The sql query to be executed in the backend.
      * @return Promise with the SQL operations results.
      */
-    public Promise sql(String query) {
+    public CompletableFuture sql(String query) {
 
         return null;
     }

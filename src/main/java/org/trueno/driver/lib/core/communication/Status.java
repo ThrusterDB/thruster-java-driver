@@ -7,9 +7,9 @@ enum Status {
     private final String text;
 
     /**
-     * @param text
+     * @param text Status string representation
      */
-    private Status(final String text) {
+    Status(final String text) {
         this.text = text;
     }
 

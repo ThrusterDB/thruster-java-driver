@@ -327,15 +327,7 @@ public class Component extends JSONObject {
             printDebug("destroy", apiFun, payload.toString());
         }
 
-        return CompletableFuture.supplyAsync(() ->
-                this.parentGraph.getConn().call(apiFun, msg)
-        ).whenComplete((ret, err) -> {
-            if (ret != null)
-                //return ret;
-                System.out.print("resolve");
-            else
-                throw new RuntimeException("Error occurred while fulfilling destroy promise", err);
-        });
+        return CompletableFuture.supplyAsync(() -> this.parentGraph.getConn().call(apiFun, msg));
     }
 
     /**

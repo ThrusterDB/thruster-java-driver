@@ -1,69 +1,51 @@
 package experiments;
 
-import com.github.nkzawa.socketio.client.Socket;
-import org.json.JSONObject;
 import org.trueno.driver.lib.core.Trueno;
-import org.trueno.driver.lib.core.communication.Callback;
-import org.trueno.driver.lib.core.communication.ErrorCallback;
-import org.trueno.driver.lib.core.communication.ResultCallback;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
 
 /**
- * Created by victor on 7/20/16.
+ * Created by: victor, miguel
+ * Date: 7/20/16
+ * Purpose:
  */
+
 public class GraphCount {
-
     public static void main(String args[]) {
-
-
         /* instantiate Trueno driver */
         final Trueno trueno = new Trueno("http://localhost", 8000);
 
         System.out.println("Connecting...");
 
         /* Connecting */
-        trueno.connect(new Callback() {
-            public void method(Socket s) {
-
-                System.out.println("connected " + s.id());
-                System.out.println("------------------------Properties, computed, and meta-------------------------------");
+        trueno.connect(s -> {
+            System.out.println("connected " + s.id());
+            System.out.println("------------------------Properties, computed, and meta-------------------------------");
 
                 /* instantiate graph */
-                Graph g = trueno.Graph("graphi");
+            Graph g = trueno.Graph("graphi");
 
-                Filter filter = g.filter()
-                        .term("prop.name", "aura");
+            Filter filter = g.filter()
+                    .term("prop.name", "aura");
 
-                g.count("v", filter).then(new ResultCallback() {
-                    public void onDone(JSONObject result) {
-                        System.out.println("Info from Graph g counted " + result);
-                    }
-                }, new ErrorCallback() {
-                    public void onFail(JSONObject error) {
-                        System.out.println("Error: Could not count Graph g info " + error);
-                    }
-                });
+            g.count("v", filter).whenCompleteAsync((ret, err) -> {
+                if (ret != null) {
+                    System.out.println("Info from Graph g counted " + ret.toString());
+                } else {
+                    throw new Error("Error: Could not count Graph g info " + err);
+                }
+            });
 
-                g.count("v").then(new ResultCallback() {
-                    public void onDone(JSONObject result) {
-                        System.out.println("Total vertices in graph " + result);
-                    }
-                }, new ErrorCallback() {
-                    public void onFail(JSONObject error) {
-                        System.out.println("Error: Could not count vertices " + error);
-                    }
-                });
+            g.count("v").whenCompleteAsync((ret, err) -> {
+                if (ret != null) {
+                    System.out.println("Total vertices in graph " + ret.toString());
+                } else {
+                    throw new Error("Could not count vertices " + err);
+                }
 
-
-            }
-        }, new Callback() {
-            public void method(Socket socket) {
-                System.out.println("disconnected");
-
-            }
-        });
+            });
+        }, socket -> System.out.println("disconnected"));
 
     }
 }
