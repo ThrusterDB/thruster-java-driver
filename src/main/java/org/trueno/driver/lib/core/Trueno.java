@@ -6,7 +6,8 @@ import org.trueno.driver.lib.core.communication.RPC;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
 /**
- * Created by: victor
+ * @author Victor Santos
+ * @author Miguel Rivera
  * Date: 7/19/16
  * Purpose:
  */
@@ -44,15 +45,13 @@ public class Trueno {
     }
 
     public void connect(final Callback connCallback, final Callback discCallback) {
-        /* This object reference */
-        final Trueno self = this;
 
         /* Connect the rpc object */
         this.rpc.connect(socket -> {
-            self.isConnected = true;
+            this.isConnected = true;
             connCallback.method(socket);
         }, socket -> {
-            self.isConnected = false;
+            this.isConnected = false;
             discCallback.method(socket);
         });
     }
@@ -99,8 +98,8 @@ public class Trueno {
         isConnected = connected;
     }
 
+    /*=========================== MIX METHODS ==========================*/
 
-     /*======================== MIX METHODS =======================*/
     /**
      * Creates a new graph instance related with this connection.
      *
@@ -117,8 +116,8 @@ public class Trueno {
         return g;
     }
 
+    /*======================== REMOTE OPERATIONS =======================*/
 
-    /*------------------- REMOTE OPERATIONS ----------------------*/
     /**
      * Execute SQL query in the backend.
      *
