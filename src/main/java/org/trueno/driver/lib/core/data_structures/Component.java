@@ -1,6 +1,6 @@
 package org.trueno.driver.lib.core.data_structures;
 
-import org.jdeferred.Promise;
+import com.github.nkzawa.socketio.parser.Packet;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
@@ -268,7 +268,7 @@ public class Component extends JSONObject {
      *
      * @return
      */
-    public Promise persist() {
+    public CompletableFuture<JSONObject> persist() {
         final String apiFun = "ex_persist";
 
         this.validateGraphLabel();
@@ -279,9 +279,40 @@ public class Component extends JSONObject {
         }
 
         Message msg = new Message();
-        //msg.setPayload();
+        JSONObject payload = new JSONObject();
 
-        return null;
+        try {
+            payload.put("graph", this.getLabel());
+            payload.put("type", this.type);
+            payload.put("obj", this);
+
+            msg.setPayload(payload);
+        } catch (JSONException ex) {
+            throw new RuntimeException("An error occurred while constructing JSON Object - destroy.", ex);
+        }
+
+        if(this.debug) {
+            printDebug("persist", apiFun, msg.toString());
+        }
+
+        if(this.parentGraph.isBulkOpen()) {
+            this.parentGraph.pushOperation(apiFun, msg.getPayload());
+            return CompletableFuture.supplyAsync(JSONObject::new);
+        }
+
+        return this.parentGraph.getConn().call(apiFun, msg).handleAsync((ret, err) -> {
+            try {
+                if (ret != null) {
+                    this.setId(ret.get("id").toString());
+                    return ret;
+                } else {
+                    throw new Error("Error while persisting graph in database", err);
+                }
+            }
+            catch (JSONException ex) {
+                throw new RuntimeException("Error while manipulating JSON object - persist", ex);
+            }
+        });
     }
 
     /**
