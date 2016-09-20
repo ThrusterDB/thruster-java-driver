@@ -1,9 +1,11 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
 
+import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -14,10 +16,10 @@ import java.util.concurrent.CompletableFuture;
 
 public class Vertex extends Component {
 
-    Vertex() {
+    public Vertex() {
 
         try {
-            this.put("partition",  "");
+            this.put("partition", "");
 
             this.setType("v");
 
@@ -54,12 +56,12 @@ public class Vertex extends Component {
         return neighbors(cmp, filter, "out");
     }
 
-    CompletableFuture neighbors(String cmpType, Filter filter, String direction) {
+    public CompletableFuture<JSONObject> neighbors(String cmpType, Filter filter, String direction) {
         final String apiFun = "ex_neighbors";
 
         this.validateCmp(cmpType);
 
-        if(!this.hasId()) {
+        if (!this.hasId()) {
             throw new Error("Vertex ID is required.");
         }
 
@@ -86,18 +88,37 @@ public class Vertex extends Component {
             printDebug(direction, apiFun, payload.toString());
         }
 
-        return CompletableFuture.supplyAsync(() ->
-                this.getParentGraph().getConn().call(apiFun, msg)
-        ).whenComplete((ret, err) -> {
-            if (ret != null)
-                if (cmpType.equals("v")) {
+        return this.getParentGraph().getConn().call(apiFun, msg).whenCompleteAsync((ret, err) -> {
+            if (ret != null) {
+                CompletableFuture.supplyAsync(() -> {
+                    if (cmpType.equals("v")) {
+                        JSONArray vertices = new JSONArray();
+                        Vertex v;
 
-                }
-                else if (cmpType.equals("e")) {
+                        for(Iterator it = ret.keys(); it.hasNext();) {
+                            v = new Vertex();
+                            v.setProperty("_source", it.next().toString());
+                            vertices.put(v);
+                        }
 
-                }
-            else
-                throw new RuntimeException("Error occurred while fulfilling destroy promise", err);
+                        return vertices;
+                    } else {
+                        JSONArray edges = new JSONArray();
+                        Edge e;
+
+                        for(Iterator it = ret.keys(); it.hasNext();) {
+                            e = new Edge();
+                            e.setSource(it.next().toString());
+                            edges.put(e);
+                        }
+
+                        return edges;
+                    }
+                });
+            }
+            else {
+                throw new Error("An error occurred while fetching RPC message - vertex neighbors", err);
+            }
         });
     }
 
@@ -114,7 +135,7 @@ public class Vertex extends Component {
 
         this.validateCmp(cmpType);
 
-        if(!this.hasId()) {
+        if (!this.hasId()) {
             throw new Error("Vertex ID is required.");
         }
 
@@ -141,14 +162,11 @@ public class Vertex extends Component {
             printDebug(direction + " Degree", apiFun, payload.toString());
         }
 
-        return CompletableFuture.supplyAsync(() ->
-                this.getParentGraph().getConn().call(apiFun, msg)
-        ).whenComplete((ret, err) -> {
+        return this.getParentGraph().getConn().call(apiFun, msg).handleAsync((ret, err) -> {
             if (ret != null)
-                //return ret;
-                System.out.print("resolve");
+                return ret;
             else
-                throw new RuntimeException("Error occurred while fulfilling destroy promise", err);
+                throw new Error("Error occurred while fulfilling destroy promise - vertex", err);
         });
     }
 }

@@ -95,7 +95,7 @@ class Edge extends Component {
         return new Filter();
     }
 
-    CompletableFuture vertices() {
+    CompletableFuture<JSONObject> vertices() {
         final String apiFun = "ex_vertices";
 
         if(!this.hasId()) {
@@ -120,12 +120,9 @@ class Edge extends Component {
             printDebug("vertices", apiFun, payload.toString());
         }
 
-        return CompletableFuture.supplyAsync(() ->
-                this.getParentGraph().getConn().call(apiFun, msg)
-        ).whenComplete((ret, err) -> {
+        return this.getParentGraph().getConn().call(apiFun, msg).handleAsync((ret, err) -> {
             if (ret != null)
-                //return ret;
-                System.out.print("resolve");
+                return ret;
             else
                 throw new RuntimeException("Error occurred while fulfilling destroy promise", err);
         });

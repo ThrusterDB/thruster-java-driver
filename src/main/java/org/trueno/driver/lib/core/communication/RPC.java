@@ -1,18 +1,15 @@
 package org.trueno.driver.lib.core.communication;
 
-import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.Ack;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
-import org.jdeferred.Deferred;
-import org.jdeferred.Promise;
-import org.jdeferred.impl.DeferredObject;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by: victor
@@ -34,7 +31,7 @@ public class RPC {
         /* Set default properties */
         this.host = "http://localhost";
         this.port = 8000;
-        this.procedures = new HashMap<String, Method>();
+        this.procedures = new HashMap<>();
         this.socket = null;
     }
 
@@ -50,74 +47,48 @@ public class RPC {
 
     /* Public methods */
     public void expose(String procedureName, Method procedureFunction) {
-    /* Insert the procedure in the collection */
+        /* Insert the procedure in the collection */
         this.procedures.put(procedureName, procedureFunction);
     }
 
+    public CompletableFuture<JSONObject> call(final String method, final JSONObject arg) {
+        return CompletableFuture.supplyAsync(() -> {
+            JSONObject value = new JSONObject();
 
-    public Promise call(final String method, final JSONObject arg) {
+            /* Sending event */
+            this.socket.emit(method, arg, (Ack) objects -> {
 
-
-        /* This object reference */
-        final RPC self = this;
-
-        /* Instantiating deferred object */
-        final Deferred deferred = new DeferredObject();
-        /* Extracting promise */
-        Promise promise = deferred.promise();
-        /* Sending event */
-        self.socket.emit(method, arg, new Ack() {
-            public void call(Object... objects) {
-
-                /* casting json object */
+            /* casting json object */
                 JSONObject args = (JSONObject) objects[0];
 
-                /* checking the result and resolving or rejecting */
+            /* checking the result and resolving or rejecting */
                 try {
-                    JSONObject value = new JSONObject();
                     value.put("result", args.get("_payload"));
 
-                    if (args.get("_status").toString().equals(Status.SUCCESS.toString())) {
-                        deferred.resolve(value);
-                    } else if (args.get("_status").toString().equals(Status.ERROR.toString())) {
-                        deferred.reject(value);
+                    if (args.get("_status").toString().equals(Status.ERROR.toString())) {
+                        throw new Error("An error occurred while retrieving data: " + value);
                     }
 
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("An error occurred while manipulating JSON message", e);
                 }
-            }
-        });
+            });
 
-        return promise;
+            return value;
+        });
     }
 
     public void connect(final Callback connCallback, final Callback discCallback) {
-
-
-        /* This object reference */
-        final RPC self = this;
-
         /* instantiating the socket */
         try {
             this.socket = IO.socket(this.host + ":" + this.port);
         } catch (URISyntaxException e) {
-            System.out.println(e);
+            throw new Error("Could not connect to the database", e);
         }
 
-        this.socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-            public void call(Object... args) {
-                connCallback.method(self.socket);
-            }
-        }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
-            public void call(Object... args) {
-                discCallback.method(self.socket);
-            }
-        });
+        this.socket.on(Socket.EVENT_CONNECT, args -> connCallback.method(this.socket)).on(Socket.EVENT_DISCONNECT, args -> discCallback.method(this.socket));
 
         /* Connecting Socket */
         this.socket.connect();
     }
-
-
 }
