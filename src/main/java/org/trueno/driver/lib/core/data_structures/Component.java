@@ -1,6 +1,5 @@
 package org.trueno.driver.lib.core.data_structures;
 
-import com.github.nkzawa.socketio.parser.Packet;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
@@ -291,11 +290,11 @@ public class Component extends JSONObject {
             throw new RuntimeException("An error occurred while constructing JSON Object - destroy.", ex);
         }
 
-        if(this.debug) {
+        if (this.debug) {
             printDebug("persist", apiFun, msg.toString());
         }
 
-        if(this.parentGraph.isBulkOpen()) {
+        if (this.parentGraph.isBulkOpen()) {
             this.parentGraph.pushOperation(apiFun, msg.getPayload());
             return CompletableFuture.supplyAsync(JSONObject::new);
         }
@@ -308,8 +307,7 @@ public class Component extends JSONObject {
                 } else {
                     throw new Error("Error while persisting graph in database", err);
                 }
-            }
-            catch (JSONException ex) {
+            } catch (JSONException ex) {
                 throw new RuntimeException("Error while manipulating JSON object - persist", ex);
             }
         });

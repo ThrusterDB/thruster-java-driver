@@ -1,17 +1,13 @@
 package experiments;
 
-import org.jdeferred.DoneCallback;
 import org.trueno.driver.lib.core.Trueno;
-import com.github.nkzawa.socketio.client.Socket;
-import org.trueno.driver.lib.core.communication.Callback;
-import org.trueno.driver.lib.core.communication.Message;
-import org.trueno.driver.lib.core.data_structures.Graph;
-import org.trueno.driver.lib.core.data_structures.Vertex;
-
 
 /**
- * Created by victor on 7/20/16.
+ * Created by: victor
+ * Date: 7/20/16
+ * Purpose:
  */
+
 public class driver {
 
     public static void main(String args[]){
