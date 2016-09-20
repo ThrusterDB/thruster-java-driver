@@ -1,6 +1,9 @@
 package org.trueno.driver.lib.core;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Callback;
+import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
@@ -45,15 +48,12 @@ public class Trueno {
     }
 
     public void connect(final Callback connCallback, final Callback discCallback) {
-        /* This object reference */
-        final Trueno self = this;
-
         /* Connect the rpc object */
         this.rpc.connect(socket -> {
-            self.isConnected = true;
+            this.isConnected = true;
             connCallback.method(socket);
         }, socket -> {
-            self.isConnected = false;
+            this.isConnected = false;
             discCallback.method(socket);
         });
     }
@@ -126,7 +126,23 @@ public class Trueno {
      * @param query The sql query to be executed in the backend.
      * @return Promise with the SQL operations results.
      */
-    public CompletableFuture sql(String query) {
+    public CompletableFuture<JSONObject> sql(String query) {
+        final String apiFun = "ex_sql";
+
+        Message msg = new Message();
+        JSONObject payload = new JSONObject();
+
+        try {
+            payload.put("q", query);
+            msg.setPayload(payload);
+
+        } catch (JSONException ex) {
+            throw new RuntimeException("Error ocurred while manipulating JSON Object - query", ex);
+        }
+
+//        return this.rpc.call(apiFun, msg).handleAsync(() -> {
+//
+//        });
 
         return null;
     }

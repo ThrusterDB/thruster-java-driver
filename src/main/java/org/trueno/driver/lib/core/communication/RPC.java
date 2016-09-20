@@ -47,10 +47,9 @@ public class RPC {
 
     /* Public methods */
     public void expose(String procedureName, Method procedureFunction) {
-    /* Insert the procedure in the collection */
+        /* Insert the procedure in the collection */
         this.procedures.put(procedureName, procedureFunction);
     }
-
 
     public CompletableFuture<JSONObject> call(final String method, final JSONObject arg) {
         return CompletableFuture.supplyAsync(() -> {
@@ -80,9 +79,6 @@ public class RPC {
     }
 
     public void connect(final Callback connCallback, final Callback discCallback) {
-        /* This object reference */
-        final RPC self = this;
-
         /* instantiating the socket */
         try {
             this.socket = IO.socket(this.host + ":" + this.port);
@@ -90,7 +86,7 @@ public class RPC {
             throw new Error("Could not connect to the database", e);
         }
 
-        this.socket.on(Socket.EVENT_CONNECT, args -> connCallback.method(self.socket)).on(Socket.EVENT_DISCONNECT, args -> discCallback.method(self.socket));
+        this.socket.on(Socket.EVENT_CONNECT, args -> connCallback.method(this.socket)).on(Socket.EVENT_DISCONNECT, args -> discCallback.method(this.socket));
 
         /* Connecting Socket */
         this.socket.connect();
