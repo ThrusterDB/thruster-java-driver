@@ -49,9 +49,9 @@ public class Component extends JSONObject {
         }
     }
 
-      /*======================== GETTERS & SETTERS =======================*/
+    /*======================== GETTERS & SETTERS =======================*/
 
-    String getId() {
+    public String getId() {
         try {
             return this.get("id").toString();
         } catch (JSONException ex) {
@@ -59,7 +59,7 @@ public class Component extends JSONObject {
         }
     }
 
-    void setId(String value) {
+    public void setId(String value) {
         try {
             this.put("id", value);
         } catch (JSONException ex) {
@@ -67,7 +67,7 @@ public class Component extends JSONObject {
         }
     }
 
-    boolean hasId() {
+    public boolean hasId() {
         try {
             return this.has("id") && !this.get("id").toString().isEmpty();
         } catch (JSONException ex) {
@@ -75,7 +75,7 @@ public class Component extends JSONObject {
         }
     }
 
-    String getLabel() {
+    public String getLabel() {
         try {
             return this.get("label").toString();
         } catch (JSONException ex) {
@@ -91,23 +91,23 @@ public class Component extends JSONObject {
         }
     }
 
-    String getRef() {
+    public String getRef() {
         return this.ref;
     }
 
-    void setType(String type) {
+    public void setType(String type) {
         this.type = type;
     }
 
-    String getType() {
+    public String getType() {
         return this.type;
     }
 
-    void setParentGraph(Graph g) {
+    public void setParentGraph(Graph g) {
         this.parentGraph = g;
     }
 
-    Graph getParentGraph() {
+    public Graph getParentGraph() {
         return this.parentGraph;
     }
 
@@ -115,12 +115,11 @@ public class Component extends JSONObject {
         this.debug = debug;
     }
 
-    boolean getDebug() {
+    public boolean getDebug() {
         return this.debug;
     }
 
-
-/*=========================== PROPERTIES ===========================*/
+    /*=========================== PROPERTIES ===========================*/
 
     public JSONObject properties() {
 
@@ -157,7 +156,7 @@ public class Component extends JSONObject {
         }
     }
 
-/*============================ COMPUTED ============================*/
+    /*============================ COMPUTED ============================*/
 
     public JSONObject computed() {
         try {
@@ -230,7 +229,7 @@ public class Component extends JSONObject {
         }
     }
 
-/*=========================== META ===========================*/
+    /*=========================== META ===========================*/
 
     public HashMap meta() {
         try {
@@ -248,7 +247,7 @@ public class Component extends JSONObject {
         }
     }
 
-/*=========================== VALIDATION ===========================*/
+    /*=========================== VALIDATION ===========================*/
 
     void validateGraphLabel() {
         /* If label is not present throw error */
