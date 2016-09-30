@@ -50,6 +50,30 @@ public class Trueno {
         this.rpc = new RPC(this.host, this.port);
     }
 
+    /**
+     * Establish the connection with the Trueno Database Server.
+     *
+     * @param connCallback
+     * @param discCallback
+     */
+    public void connect(final Callback connCallback, final Callback discCallback) {
+        /* Connect the rpc object */
+        this.rpc.connect(socket -> {
+            this.isConnected = true;
+            connCallback.method(socket);
+        }, socket -> {
+            this.isConnected = false;
+            discCallback.method(socket);
+        });
+    }
+
+    /**
+     * Disconnect from Trueno Database Server.
+     */
+    public void disconnect() {
+        rpc.disconnect();
+    }
+
     /*======================== GETTERS & SETTERS =======================*/
 
     public boolean isDebug() {
@@ -95,23 +119,6 @@ public class Trueno {
     /*=========================== MIX METHODS ==========================*/
 
     /**
-     * Establish the connection with the Trueno Database Server.
-     *
-     * @param connCallback
-     * @param discCallback
-     */
-    public void connect(final Callback connCallback, final Callback discCallback) {
-        /* Connect the rpc object */
-        this.rpc.connect(socket -> {
-            this.isConnected = true;
-            connCallback.method(socket);
-        }, socket -> {
-            this.isConnected = false;
-            discCallback.method(socket);
-        });
-    }
-
-    /**
      * Creates a new graph instance related with this connection.
      *
      * @param label The graph label.
@@ -155,6 +162,5 @@ public class Trueno {
 
         return null;
     }
-
 
 }

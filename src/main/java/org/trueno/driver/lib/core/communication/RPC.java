@@ -91,4 +91,8 @@ public class RPC {
         /* Connecting Socket */
         this.socket.connect();
     }
+
+    public void disconnect() {
+        this.socket.disconnect();
+    }
 }
