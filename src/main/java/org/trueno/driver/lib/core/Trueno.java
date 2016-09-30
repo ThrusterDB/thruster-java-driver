@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author Victor Santos
  * @author Miguel Rivera
+ * @author Edgardo Barsallo Yi
  *
  * Date: 7/19/16
  * Purpose:
@@ -47,17 +48,6 @@ public class Trueno {
         this.host = host != null ? host : this.host;
         this.port = port != null ? port : this.port;
         this.rpc = new RPC(this.host, this.port);
-    }
-
-    public void connect(final Callback connCallback, final Callback discCallback) {
-        /* Connect the rpc object */
-        this.rpc.connect(socket -> {
-            this.isConnected = true;
-            connCallback.method(socket);
-        }, socket -> {
-            this.isConnected = false;
-            discCallback.method(socket);
-        });
     }
 
     /*======================== GETTERS & SETTERS =======================*/
@@ -103,6 +93,23 @@ public class Trueno {
     }
 
     /*=========================== MIX METHODS ==========================*/
+
+    /**
+     * Establish the connection with the Trueno Database Server.
+     *
+     * @param connCallback
+     * @param discCallback
+     */
+    public void connect(final Callback connCallback, final Callback discCallback) {
+        /* Connect the rpc object */
+        this.rpc.connect(socket -> {
+            this.isConnected = true;
+            connCallback.method(socket);
+        }, socket -> {
+            this.isConnected = false;
+            discCallback.method(socket);
+        });
+    }
 
     /**
      * Creates a new graph instance related with this connection.

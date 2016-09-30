@@ -32,6 +32,10 @@ public class Graph extends Component {
         this.setType("g");
         this.setParentGraph(this);
         this.setDebug(false);
+
+        /* initializing edges and vertices maps */
+        this.edges = new HashMap<>();
+        this.vertices = new HashMap<>();
     }
 
     /*======================== GETTERS & SETTERS =======================*/
@@ -82,6 +86,7 @@ public class Graph extends Component {
         v.setDebug(this.getDebug());
         v.setParentGraph(this);
         /* adding vertex to the collection */
+        System.out.println("v.getRef() " + v.getRef());
         this.vertices.put(v.getRef(), v);
 
         return v;
@@ -189,6 +194,40 @@ public class Graph extends Component {
         /* if debug display operation params */
         if (this.getDebug()) {
             printDebug("fetch ", apiFunc, msg.toString());
+        }
+
+        return this.conn.call(apiFunc, msg);
+    }
+
+    public CompletableFuture<JSONObject> open() {
+
+        final String apiFunc = "ex_open";
+
+        /* If label is not present throw error */
+        this.validateGraphLabel();
+
+        /* building the message */
+        Message msg = new Message();
+
+        try {
+            /* building payload */
+            JSONObject payload = new JSONObject();
+
+            payload.put("graph", this.getLabel());
+            payload.put("type", "g");
+            payload.put("mask", true);
+            payload.put("obj",  this);
+
+            /* set the payload */
+            msg.setPayload(payload);
+
+        } catch (JSONException e) {
+            throw new RuntimeException("Error while constructing JSON Object - fetch", e);
+        }
+
+        /* if debug display operation params */
+        if (this.getDebug()) {
+            printDebug("open ", apiFunc, msg.toString());
         }
 
         return this.conn.call(apiFunc, msg);
