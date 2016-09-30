@@ -1,7 +1,10 @@
 package org.trueno.driver.lib.core;
 
-import org.junit.Test;
+import org.junit.*;
+
 import static org.junit.Assert.*;
+
+import org.junit.runners.MethodSorters;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
@@ -11,126 +14,117 @@ import org.trueno.driver.lib.core.data_structures.Graph;
  * Purpose:
  */
 
+@FixMethodOrder(MethodSorters.JVM)
 public class TruenoTest {
 
-    private final Trueno trueno = new Trueno("http://localhost", 8000);
+    private final static Trueno trueno = new Trueno("http://localhost", 8000);
 
-    @Test
-    public void CountVerticesInGraph() {
-        System.out.println("Connecting...");
+    @BeforeClass
+    public static void Connect() {
+        trueno.connect(s -> System.out.println("Connected: " + s.id()), s -> System.out.println("Disconnected"));
 
-        /* Connecting */
-        trueno.connect(s -> {
-            System.out.println("Connected: " + s.id());
-            System.out.println("------------------------Properties, computed, and meta-------------------------------");
+        try {
+            Thread.sleep(750);
+            assertTrue(trueno.isConnected());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
-            /* instantiate graph */
-            Graph g = trueno.Graph("graphi");
+    @AfterClass
+    public static void DisconnectDatabase() {
+        if (!trueno.isConnected()) {
+            fail("Trueno Database could not connect");
+        }
 
-            Filter filter = g.filter().term("prop.name", "aura");
-
-            g.count("v", filter).whenCompleteAsync((ret, err) -> {
-                if (ret != null) {
-                    System.out.println("Info from Graph g counted: " + ret.toString());
-                } else {
-                    throw new Error("Error: Could not count Graph g info " + err);
-                }
-            });
-
-            g.count("v").whenCompleteAsync((ret, err) -> {
-                if (ret != null) {
-                    System.out.println("Total vertices in graph " + ret.toString());
-                } else {
-                    throw new Error("Could not count vertices " + err);
-                }
-
-            });
-        }, socket -> System.out.println("disconnected"));
-
-        //fail("Finish Implementation");
+        trueno.disconnect();
     }
 
     @Test
     public void CreateNewGraph() {
-        System.out.println("Connecting...");
+        System.out.println("------------------------Properties, computed, and meta-------------------------------");
 
-        /* Connecting */
-        trueno.connect(s -> {
+        /* instantiate graph */
+        Graph g = trueno.Graph("graphi");
 
-            System.out.println("connected " + s.id());
-            System.out.println("------------------------Properties, computed, and meta-------------------------------");
+        /* Adding properties and computed fields */
+        g.setProperty("version", 1);
 
-            /* instantiate graph */
-            Graph g = trueno.Graph("graphi");
+        g.setComputed("pagerank", "average", 2.55);
+        g.setComputed("pagerank", "low", 1);
 
-            /* Adding properties and computed fields */
-            g.setProperty("version", 1);
+        g.create().whenCompleteAsync((ret, err) -> {
+            if (ret != null) {
+                System.out.println("Graph g created " + ret.toString());
+            } else {
+                throw new Error("Error: Graph g creation failed " + err);
+            }
+        });
+    }
 
-            g.setComputed("pagerank", "average", 2.55);
-            g.setComputed("pagerank", "low", 1);
+    @Test
+    public void CountVerticesInGraph() {
+        System.out.println("------------------------Properties, computed, and meta-------------------------------");
 
+        /* instantiate graph */
+        Graph g = trueno.Graph("graphi");
 
-            g.create().whenCompleteAsync((ret, err) -> {
-                if (ret != null) {
-                    System.out.println("Graph g created " + ret.toString());
-                } else {
-                    throw new Error("Error: Graph g creation failed " + err);
-                }
-            });
+        Filter filter = g.filter().term("prop.name", "aura");
 
-        }, socket -> System.out.println("disconnected"));
+        g.count("v", filter).whenCompleteAsync((ret, err) -> {
+            if (ret != null) {
+                System.out.println("Info from Graph g counted: " + ret.toString());
+            } else {
+                throw new Error("Error: Could not count Graph g info " + err);
+            }
+        });
 
-        //fail("Finish Implementation");
+        g.count("v").whenCompleteAsync((ret, err) -> {
+            if (ret != null) {
+                System.out.println("Total vertices in graph " + ret.toString());
+            } else {
+                throw new Error("Could not count vertices " + err);
+            }
+        });
     }
 
     @Test
     public void FetchGraphFromDB() {
-        System.out.println("Connecting...");
-
-        /* Connecting */
-        trueno.connect(s -> {
-
-            System.out.println("connected " + s.id());
-            System.out.println("------------------------Properties, computed, and meta-------------------------------");
+        System.out.println("------------------------Properties, computed, and meta-------------------------------");
 
             /* instantiate graph */
-            Graph g = trueno.Graph("graphi");
+        Graph g = trueno.Graph("graphi");
 
-            Filter filter = g.filter()
-                    .term("prop.version", 1);
+        Filter filter = g.filter()
+                .term("prop.version", 1);
 
-            Filter filter2 = g.filter()
-                    .term("prop.name", "aura");
+        Filter filter2 = g.filter()
+                .term("prop.name", "aura");
 
 
-            g.fetch("g", filter).whenComplete((result, error) -> {
-                if (result != null) {
-                    System.out.println("Info from Graph g component v fetched " + result.toString());
-                }
-                else {
-                    throw new Error("Could not fetch information from graph", error);
-                }
-            });
+        g.fetch("g", filter).whenCompleteAsync((ret, error) -> {
+            if (ret != null) {
+                System.out.println("Info from Graph g component v fetched " + ret.toString());
+            } else {
+                throw new Error("Could not fetch information from graph", error);
+            }
+        });
 
-            g.fetch("v", filter2).whenCompleteAsync((ret, err) -> {
-                if (ret != null) {
-                    System.out.println("Info from Graph g component v fetched " + ret.toString());
-                }
-                else {
-                    throw new Error("Error: Could not fetch Graph g component v info " + err);
-                }
-            });
+        g.fetch("v", filter2).whenCompleteAsync((ret, err) -> {
+            if (ret != null) {
+                System.out.println("Info from Graph g component v fetched " + ret.toString());
+            } else {
+                throw new Error("Error: Could not fetch Graph g component v info " + err);
+            }
+        });
 
-            g.fetch("e").whenCompleteAsync((ret, err) -> {
-                if (ret != null) {
-                    System.out.println("All edges " + ret.toString());
-                }
-                else {
-                    throw new Error("Error: fetching all edges " + err);
-                }
-            });
-        }, socket -> System.out.println("disconnected"));
+        g.fetch("e").whenCompleteAsync((ret, err) -> {
+            if (ret != null) {
+                System.out.println("All edges " + ret.toString());
+            } else {
+                throw new Error("Error: fetching all edges " + err);
+            }
+        });
 
-        //fail("Finish Implementation");
     }
 }

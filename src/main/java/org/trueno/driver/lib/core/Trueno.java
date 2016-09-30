@@ -60,6 +60,10 @@ public class Trueno {
         });
     }
 
+    public void disconnect() {
+        rpc.disconnect();
+    }
+
     /*======================== GETTERS & SETTERS =======================*/
 
     public boolean isDebug() {
@@ -148,6 +152,5 @@ public class Trueno {
 
         return null;
     }
-
 
 }
