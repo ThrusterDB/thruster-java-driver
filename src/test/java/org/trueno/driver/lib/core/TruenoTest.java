@@ -9,7 +9,7 @@ import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
 /**
- * Created by: miguel
+ * @author Miguel Rivera
  * Date: 9/20/16
  * Purpose:
  */
