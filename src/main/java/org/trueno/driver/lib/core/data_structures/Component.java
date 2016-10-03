@@ -319,15 +319,15 @@ public class Component extends JSONObject {
      * @param ftr Filter to be applied.
      * @return Promise with the async destruction result.
      */
-    public CompletableFuture destroy(String cmp, Filter ftr) {
+    public CompletableFuture<JSONObject> destroy(String cmp, Filter ftr) {
         final String apiFun = "ex_destroy";
 
         //Validate presence of graph label
         this.validateGraphLabel();
 
-        if (this.type.equals("g")) {
+        if (this.type.equals("g") && cmp != null) {
             this.validateCmp(cmp);
-        } else if (this.getId().isEmpty()) {
+        } else if ((cmp = this.getId()).isEmpty()) {
             throw new Error("Component ID is required");
         }
 
@@ -339,8 +339,7 @@ public class Component extends JSONObject {
 
             if (this.type.equals("g")) {
                 payload.put("type", cmp);
-                if (ftr != null)
-                    payload.put("ftr", ftr);
+                payload.put("ftr", ftr != null ? ftr : new Filter());
             } else {
                 payload.put("type", this.type);
                 payload.put("obj", new JSONObject().put("id", this.getId()));
@@ -355,7 +354,7 @@ public class Component extends JSONObject {
             printDebug("destroy", apiFun, payload.toString());
         }
 
-        return CompletableFuture.supplyAsync(() -> this.parentGraph.getConn().call(apiFun, msg));
+        return this.parentGraph.getConn().call(apiFun, msg);
     }
 
     /**
@@ -364,7 +363,7 @@ public class Component extends JSONObject {
      * @param cmp Component to be destroyed.
      * @return Promise with the async destruction result.
      */
-    public CompletableFuture destroy(String cmp) {
+    public CompletableFuture<JSONObject> destroy(String cmp) {
         return this.destroy(cmp, null);
     }
 
@@ -373,7 +372,7 @@ public class Component extends JSONObject {
      *
      * @return Promise with the async destruction result.
      */
-    public CompletableFuture destroy() {
+    public CompletableFuture<JSONObject> destroy() {
         return this.destroy(null, null);
     }
 
