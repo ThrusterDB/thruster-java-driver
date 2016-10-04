@@ -86,7 +86,6 @@ public class Graph extends Component {
         v.setDebug(this.getDebug());
         v.setParentGraph(this);
         /* adding vertex to the collection */
-        System.out.println("v.getRef() " + v.getRef());
         this.vertices.put(v.getRef(), v);
 
         return v;
