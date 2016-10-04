@@ -1,5 +1,10 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.jdeferred.Deferred;
+import org.jdeferred.DoneCallback;
+import org.jdeferred.FailCallback;
+import org.jdeferred.Promise;
+import org.jdeferred.impl.DeferredObject;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
@@ -266,7 +271,7 @@ public class Component extends JSONObject {
      *
      * @return
      */
-    public CompletableFuture<JSONObject> persist() {
+    public Promise<JSONObject, JSONObject, Integer> persist() {
         final String apiFun = "ex_persist";
 
         this.validateGraphLabel();
@@ -295,21 +300,24 @@ public class Component extends JSONObject {
 
         if (this.parentGraph.isBulkOpen()) {
             this.parentGraph.pushOperation(apiFun, msg.getPayload());
-            return CompletableFuture.supplyAsync(JSONObject::new);
+
         }
 
-        return this.parentGraph.getConn().call(apiFun, msg).handleAsync((ret, err) -> {
+        /* Instantiating deferred object */
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        /* Extracting promise */
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+        this.parentGraph.getConn().call(apiFun, msg).then((message) -> {
             try {
-                if (ret != null) {
-                    this.setId(ret.get("id").toString());
-                    return ret;
-                } else {
-                    throw new Error("Error while persisting graph in database", err);
-                }
+                this.setId(message.get("id").toString());
+                deferred.resolve(message);
             } catch (JSONException ex) {
                 throw new RuntimeException("Error while manipulating JSON object - persist", ex);
             }
-        });
+        }, deferred::reject);
+
+        return promise;
     }
 
     /**
@@ -319,7 +327,7 @@ public class Component extends JSONObject {
      * @param ftr Filter to be applied.
      * @return Promise with the async destruction result.
      */
-    public CompletableFuture<JSONObject> destroy(String cmp, Filter ftr) {
+    public Promise<JSONObject, JSONObject, Integer> destroy(String cmp, Filter ftr) {
         final String apiFun = "ex_destroy";
 
         //Validate presence of graph label
@@ -363,7 +371,7 @@ public class Component extends JSONObject {
      * @param cmp Component to be destroyed.
      * @return Promise with the async destruction result.
      */
-    public CompletableFuture<JSONObject> destroy(String cmp) {
+    public Promise<JSONObject, JSONObject, Integer> destroy(String cmp) {
         return this.destroy(cmp, null);
     }
 
@@ -372,7 +380,7 @@ public class Component extends JSONObject {
      *
      * @return Promise with the async destruction result.
      */
-    public CompletableFuture<JSONObject> destroy() {
+    public Promise<JSONObject, JSONObject, Integer> destroy() {
         return this.destroy(null, null);
     }
 

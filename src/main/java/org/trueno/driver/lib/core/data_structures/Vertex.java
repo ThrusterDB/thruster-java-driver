@@ -1,5 +1,9 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.jdeferred.Deferred;
+import org.jdeferred.DoneCallback;
+import org.jdeferred.Promise;
+import org.jdeferred.impl.DeferredObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,15 +52,15 @@ public class Vertex extends Component {
         return new Filter();
     }
 
-    CompletableFuture in(String cmp, Filter filter) {
+    Promise<JSONObject, JSONObject, Integer> in(String cmp, Filter filter) {
         return neighbors(cmp, filter, "in");
     }
 
-    CompletableFuture out(String cmp, Filter filter) {
+    Promise<JSONObject, JSONObject, Integer> out(String cmp, Filter filter) {
         return neighbors(cmp, filter, "out");
     }
 
-    public CompletableFuture<JSONObject> neighbors(String cmpType, Filter filter, String direction) {
+    public Promise<JSONObject, JSONObject, Integer> neighbors(String cmpType, Filter filter, String direction) {
         final String apiFun = "ex_neighbors";
 
         this.validateCmp(cmpType);
@@ -88,49 +92,51 @@ public class Vertex extends Component {
             printDebug(direction, apiFun, payload.toString());
         }
 
-        return this.getParentGraph().getConn().call(apiFun, msg).whenCompleteAsync((ret, err) -> {
-            if (ret != null) {
-                CompletableFuture.supplyAsync(() -> {
-                    if (cmpType.equals("v")) {
-                        JSONArray vertices = new JSONArray();
-                        Vertex v;
+        /* Instantiating deferred object */
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        /* Extracting promise */
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
-                        for(Iterator it = ret.keys(); it.hasNext();) {
-                            v = new Vertex();
-                            v.setProperty("_source", it.next().toString());
-                            vertices.put(v);
-                        }
+//        this.getParentGraph().getConn().call(apiFun, msg).then((DoneCallback<JSONObject> message) -> {
+//            message.onDone(d -> {
+//                if (cmpType.equals("v")) {
+//                    JSONArray vertices = new JSONArray();
+//                    Vertex v;
+//
+//                    for (Iterator it = d.keys(); it.hasNext(); ) {
+//                        v = new Vertex();
+//                        v.setProperty("_source", it.next().toString());
+//                        vertices.put(v);
+//                    }
+//
+//                    deferred.resolve(vertices);
+//                } else {
+//                    JSONArray edges = new JSONArray();
+//                    Edge e;
+//
+//                    for (Iterator it = d.keys(); it.hasNext(); ) {
+//                        e = new Edge();
+//                        e.setSource(it.next().toString());
+//                        edges.put(e);
+//                    }
+//
+//                    deferred.resolve(edges);
+//                }
+//            });
+//        }, deferred::reject);
 
-                        return vertices;
-                    } else {
-                        JSONArray edges = new JSONArray();
-                        Edge e;
-
-                        for(Iterator it = ret.keys(); it.hasNext();) {
-                            e = new Edge();
-                            e.setSource(it.next().toString());
-                            edges.put(e);
-                        }
-
-                        return edges;
-                    }
-                });
-            }
-            else {
-                throw new Error("An error occurred while fetching RPC message - vertex neighbors", err);
-            }
-        });
+        return promise;
     }
 
-    CompletableFuture inDegree(String cmp, Filter filter) {
+    Promise<JSONObject, JSONObject, Integer> inDegree(String cmp, Filter filter) {
         return degree(cmp, filter, "in");
     }
 
-    CompletableFuture outDegree(String cmp, Filter filter) {
+    Promise<JSONObject, JSONObject, Integer> outDegree(String cmp, Filter filter) {
         return degree(cmp, filter, "out");
     }
 
-    CompletableFuture degree(String cmpType, Filter filter, String direction) {
+    Promise<JSONObject, JSONObject, Integer> degree(String cmpType, Filter filter, String direction) {
         final String apiFun = "ex_degree";
 
         this.validateCmp(cmpType);
@@ -162,11 +168,6 @@ public class Vertex extends Component {
             printDebug(direction + " Degree", apiFun, payload.toString());
         }
 
-        return this.getParentGraph().getConn().call(apiFun, msg).handleAsync((ret, err) -> {
-            if (ret != null)
-                return ret;
-            else
-                throw new Error("Error occurred while fulfilling destroy promise - vertex", err);
-        });
+        return this.getParentGraph().getConn().call(apiFun, msg);
     }
 }
