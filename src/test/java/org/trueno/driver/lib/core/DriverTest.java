@@ -1,11 +1,9 @@
 package org.trueno.driver.lib.core;
 
+import org.jdeferred.DoneCallback;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Edgardo Barsallo Yi (ebarsallo)
@@ -20,31 +18,23 @@ public class DriverTest {
 
         trueno.connect(socket -> {
             /* connect */
-            System.out.println("connected");
-            Filter filter = g.filter().term("prop.age", 65);
-
-            try {
-                JSONObject test = g.fetch("v", filter).get();
-                System.out.println("fetch() 1.1 -> " + test);
-
-                JSONObject obj = new JSONObject();
-                CompletableFuture<JSONObject> future = g.fetch("v", filter);
-
-                System.out.println("fetch() 2.1 -> " + future.get());
-                System.out.println("fetch() 2.2 -> " + future.get());
-                g.fetch("v", filter).thenApplyAsync((result) -> {
-                    System.out.println("fetch() 2.3 -> " + result);
-                    return result;
-                });
-                System.out.println("fetch() 2.4 -> " + g.fetch("v").get(10, TimeUnit.SECONDS));
-
-            } catch (Exception ex) {
-                System.out.println("fetch() 1 error: " + ex);
-            }
+            System.out.println("connected " + socket.id());
 
         }, socket -> {
             /* disconnect */
             System.out.println("disconnected");
+        });
+
+        Filter filter = g.filter().term("prop.age", 65);
+
+        g.fetch("v", filter).then((result) -> {
+            System.out.println("fetch 1.1: " + result);
+        });
+
+        g.fetch("v").then(result -> {
+            System.out.println("fetch() 2.3 -> " + result.toString());
+        }).then(fn -> {
+            trueno.disconnect();
         });
 
     }

@@ -1,5 +1,10 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.jdeferred.Deferred;
+import org.jdeferred.DoneCallback;
+import org.jdeferred.FailCallback;
+import org.jdeferred.Promise;
+import org.jdeferred.impl.DeferredObject;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
@@ -7,6 +12,7 @@ import org.trueno.driver.lib.core.communication.RPC;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -119,7 +125,7 @@ public class Graph extends Component {
      *
      * @return Promise with the bulk operations results.
      */
-    public CompletableFuture<JSONObject> closeBatch() {
+    public Promise<JSONObject, JSONObject, Integer> closeBatch() {
         return this.bulk();
     }
 
@@ -150,7 +156,7 @@ public class Graph extends Component {
      *
      * @return The requested instantiated set of components.
      */
-    public CompletableFuture<JSONObject> fetch(String cmp) {
+    public Promise<JSONObject, JSONObject, Integer> fetch(String cmp) {
         return this.fetch(cmp, null);
     }
 
@@ -159,11 +165,13 @@ public class Graph extends Component {
      *
      * @return The requested instantiated set of components.
      */
-    public CompletableFuture<JSONObject> fetch(String cmp, Filter ftr) {
+    public Promise<JSONObject, JSONObject, Integer> fetch(String cmp, Filter ftr) {
 
         /* Validate the component */
         this.validateCmp(cmp);
 
+        /* This object reference */
+        final Graph self = this;
         final String apiFunc = "ex_fetch";
 
         /* If label is not present throw error */
@@ -187,18 +195,37 @@ public class Graph extends Component {
             msg.setPayload(payload);
 
         } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object - fetch", e);
+            System.out.println(e);
         }
 
         /* if debug display operation params */
         if (this.getDebug()) {
-            printDebug("fetch ", apiFunc, msg.toString());
+            System.out.println("DEBUG[fetch]: " + apiFunc + "\n" + msg.toString());
         }
 
-        return this.conn.call(apiFunc, msg);
+        /* Instantiating deferred object */
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        /* Extracting promise */
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+        this.conn.call(apiFunc, msg).then(o -> {
+            try {
+                deferred.resolve(o);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }, o -> {
+            try {
+                deferred.reject(o);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        });
+
+        return promise;
     }
 
-    public CompletableFuture<JSONObject> open() {
+    public Promise<JSONObject, JSONObject, Integer> open() {
 
         final String apiFunc = "ex_open";
 
@@ -215,7 +242,7 @@ public class Graph extends Component {
             payload.put("graph", this.getLabel());
             payload.put("type", "g");
             payload.put("mask", true);
-            payload.put("obj",  this);
+            payload.put("obj", this);
 
             /* set the payload */
             msg.setPayload(payload);
@@ -238,7 +265,7 @@ public class Graph extends Component {
      * @param cmp The component type, can be 'v','V', 'e','E', 'g', or 'G'
      * @return Promise with the count result.
      */
-    public CompletableFuture<JSONObject> count(String cmp) {
+    public Promise<JSONObject, JSONObject, Integer> count(String cmp) {
         return this.count(cmp, null);
     }
 
@@ -249,7 +276,7 @@ public class Graph extends Component {
      * @param ftr The filter to be applied
      * @return Promise with the count result.
      */
-    public CompletableFuture<JSONObject> count(String cmp, Filter ftr) {
+    public Promise<JSONObject, JSONObject, Integer> count(String cmp, Filter ftr) {
 
         /* Validate the component */
         this.validateCmp(cmp);
@@ -288,7 +315,7 @@ public class Graph extends Component {
         return this.conn.call(apiFun, msg);
     }
 
-    public CompletableFuture<JSONObject> create() {
+    public Promise<JSONObject, JSONObject, Integer> create() {
         final String apiFunc = "ex_create";
 
         /* If label is not present throw error */
@@ -322,7 +349,7 @@ public class Graph extends Component {
         return this.conn.call(apiFunc, msg);
     }
 
-    public CompletableFuture<JSONObject> bulk() {
+    public Promise<JSONObject, JSONObject, Integer> bulk() {
         final String apiFunc = "ex_bulk";
 
         /* If label is not present throw error */
@@ -348,33 +375,36 @@ public class Graph extends Component {
             printDebug("bulk", apiFunc, msg.toString());
         }
 
+        /* Instantiating deferred object */
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        /* Extracting promise */
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
         /* if no bulk operations return deferred now */
         if (this.bulkOperations.size() == 0) {
+            JSONObject json = new JSONObject();
+            try {
+                json.put("took", 0);
+                json.put("errors", false);
+                json.put("items", new ArrayList<JSONObject>());
 
-            return CompletableFuture.supplyAsync(() -> {
-                JSONObject json = new JSONObject();
-                try {
-                    json.put("took", 0);
-                    json.put("errors", false);
-                    json.put("items", new ArrayList<JSONObject>());
+                deferred.resolve(json);
 
-                    return json;
-                } catch (JSONException e) {
-                    throw new RuntimeException("Error while constructing JSON Object - bulk", e);
-                }
-            });
+                return promise;
+            } catch (JSONException e) {
+                throw new RuntimeException("Error while constructing JSON Object - bulk", e);
+            }
         }
 
-        return this.conn.call(apiFunc, msg).handleAsync((ret, err) -> {
-            if (ret != null) {
-                /* Clear structures */
-                this.isBulkOpen = false;
-                this.bulkOperations.clear();
+        this.conn.call(apiFunc, msg).then((message) -> {
+            /* Clear structures */
+            this.isBulkOpen = false;
+            this.bulkOperations.clear();
 
-                return ret;
-            } else {
-                throw new Error("Error while executing bulk operation", err);
-            }
-        });
+            deferred.resolve(message);
+
+        }, deferred::reject);
+
+        return promise;
     }
 }

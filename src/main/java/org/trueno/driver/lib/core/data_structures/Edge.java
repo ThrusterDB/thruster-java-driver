@@ -1,9 +1,11 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.jdeferred.Promise;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
 
+import java.util.IntSummaryStatistics;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -95,7 +97,7 @@ class Edge extends Component {
         return new Filter();
     }
 
-    CompletableFuture<JSONObject> vertices() {
+    public Promise<JSONObject, JSONObject, Integer> vertices() {
         final String apiFun = "ex_vertices";
 
         if(!this.hasId()) {
@@ -120,11 +122,6 @@ class Edge extends Component {
             printDebug("vertices", apiFun, payload.toString());
         }
 
-        return this.getParentGraph().getConn().call(apiFun, msg).handleAsync((ret, err) -> {
-            if (ret != null)
-                return ret;
-            else
-                throw new RuntimeException("Error occurred while fulfilling destroy promise", err);
-        });
+        return this.getParentGraph().getConn().call(apiFun, msg);
     }
 }

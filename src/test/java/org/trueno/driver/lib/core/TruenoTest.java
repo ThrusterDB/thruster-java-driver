@@ -5,6 +5,7 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 
+import org.junit.experimental.ParallelComputer;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import org.trueno.driver.lib.core.data_structures.Filter;
@@ -29,10 +30,13 @@ public class TruenoTest {
 
         try {
             Thread.sleep(750);
+
             assertTrue(trueno.isConnected());
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
         }
+
     }
 
     @AfterClass
@@ -58,11 +62,12 @@ public class TruenoTest {
         g.setComputed("pagerank", "low", 1);
 
         try {
-            JSONObject result = g.create().get();
-
-            Thread.sleep(250);
-
-            assertEquals("", result.toString());
+            g.create().then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -78,13 +83,19 @@ public class TruenoTest {
         Filter filter = g.filter().term("prop.name", "aura");
 
         try {
-            JSONObject res1 = g.count("v", filter).get();
-            JSONObject res2 = g.count("v").get();
+            g.count("v", filter).then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
 
-            Thread.sleep(250);
-
-            assertEquals("", res1.toString());
-            assertEquals("", res2.toString());
+            g.count("v").then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -102,16 +113,26 @@ public class TruenoTest {
         Filter filter2 = g.filter().term("prop.name", "aura");
 
         try {
-            JSONObject res1 = g.fetch("g", filter).get();
-            JSONObject res2 = g.fetch("v", filter2).get();
-            JSONObject res3 = g.fetch("e").get();
+            g.fetch("g", filter).then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
 
-            Thread.sleep(250);
+            g.fetch("v", filter2).then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
 
-            assertEquals("", res1.toString());
-            assertEquals("", res2.toString());
-            assertEquals("", res3.toString());
-
+            g.fetch("e").then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -131,11 +152,12 @@ public class TruenoTest {
         g.setComputed("pagerank", "low", 1);
 
         try {
-            JSONObject result = g.destroy().get();
-
-            Thread.sleep(250);
-
-            assertEquals("", result.toString());
+            g.destroy().then(message -> {
+                System.out.println(message.toString());
+                assertEquals("", message.toString());
+            }, error -> {
+                System.out.println(error.toString());
+            });
         } catch (Exception ex) {
             ex.printStackTrace();
         }
