@@ -318,15 +318,17 @@ public class Component extends JSONObject {
         this.validateGraphLabel();
 
         /* validate edge source and target */
-        if (this.type.equals("e") && (!((Edge) this).hasSource()) || !(((Edge) this).hasTarget())) {
-            throw new Error("Edge source and target are required");
+        if (this.type.equals("e")) {
+            if ( (!((Edge)this).hasSource())  || (!((Edge)this).hasTarget()) ) {
+                throw new Error("Edge source and target are required");
+            }
         }
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
         try {
-            payload.put("graph", this.getLabel());
+            payload.put("graph", this.parentGraph.getLabel());
             payload.put("type", this.type);
             payload.put("obj", this);
 
@@ -351,7 +353,8 @@ public class Component extends JSONObject {
 
         this.parentGraph.getConn().call(apiFun, msg).then((message) -> {
             try {
-                this.setId(message.get("id").toString());
+                System.out.println("message --> " + message);
+                this.setId(((JSONObject)message.getJSONArray("result").get(1)).get("_id"));
                 deferred.resolve(message);
             } catch (JSONException ex) {
                 throw new RuntimeException("Error while manipulating JSON object - persist", ex);

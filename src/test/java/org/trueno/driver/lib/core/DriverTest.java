@@ -4,6 +4,7 @@ import org.jdeferred.DoneCallback;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
+import org.trueno.driver.lib.core.data_structures.Vertex;
 
 /**
  * For testing purpose. {@link DriverTest} shows how to implement most of the Java driver features.
@@ -28,16 +29,28 @@ public class DriverTest {
             System.out.println("disconnected");
         });
 
-        Filter filter = g.filter().term("prop.age", 65);
+//        Filter filter1 = g.filter().term("prop.age", 65);
+//
+//        g.fetch("v", filter1).then((result) -> {
+//            System.out.println("fetch() 1 --> " + result);
+//        });
+//
+//        g.fetch("v").then(result -> {
+//            System.out.println("fetch() 2 -> " + result.toString());
+//        });
+//
+//        Filter filter2 = g.filter().term("id", 5);
+//        g.fetch("v", filter2).then(result -> {
+//            System.out.println("fetch() 3 -> " + result.toString());
+//        });
 
-        g.fetch("v", filter).then((result) -> {
-            System.out.println("fetch() 1 --> " + result);
-        });
-
-        g.fetch("v").then(result -> {
-            System.out.println("fetch() 2 -> " + result.toString());
-        }).then(fn -> {
-            trueno.disconnect();
+        Vertex v1 = g.addVertex();
+        v1.setId("6");
+        v1.setLabel("none");
+        v1.persist().then(result -> {
+            System.out.println("good!");
+        }).fail(e -> {
+            System.out.println(e);
         });
 
     }
