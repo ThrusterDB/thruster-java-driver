@@ -4,8 +4,12 @@ import org.jdeferred.DoneCallback;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
+import org.trueno.driver.lib.core.data_structures.Vertex;
 
 /**
+ * For testing purpose. {@link DriverTest} shows how to implement most of the Java driver features.
+ *
+ * @author Miguel Rivera
  * @author Edgardo Barsallo Yi (ebarsallo)
  */
 public class DriverTest {

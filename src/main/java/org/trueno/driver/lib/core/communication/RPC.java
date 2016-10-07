@@ -1,6 +1,5 @@
 package org.trueno.driver.lib.core.communication;
 
-import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.Ack;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -13,10 +12,11 @@ import org.json.JSONObject;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.lang.reflect.Method;
-import java.util.concurrent.CompletableFuture;
 
 /**
- * Created by: victor
+ * @author Victor Santos
+ * @author Miguel Rivera
+ *
  * Date: 7/19/16
  * Purpose:
  */
@@ -64,7 +64,7 @@ public class RPC {
         Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         /* Sending event */
-        socket.emit(method, arg, (Ack) objects -> {
+        this.socket.emit(method, arg, (Ack) objects -> {
 
             /* casting json object */
             JSONObject args = (JSONObject) objects[0];
@@ -88,6 +88,7 @@ public class RPC {
         return promise;
     }
 
+
     public void connect(final Callback connCallback, final Callback discCallback) {
         /* instantiating the socket */
         try {
@@ -96,7 +97,9 @@ public class RPC {
             throw new Error("Could not connect to the database", e);
         }
 
-        this.socket.on(Socket.EVENT_CONNECT, args -> connCallback.method(this.socket)).on(Socket.EVENT_DISCONNECT, args -> discCallback.method(this.socket));
+        this.socket
+                .on(Socket.EVENT_CONNECT,    args -> connCallback.method(this.socket))
+                .on(Socket.EVENT_DISCONNECT, args -> discCallback.method(this.socket));
 
         /* Connecting Socket */
         this.socket.connect();

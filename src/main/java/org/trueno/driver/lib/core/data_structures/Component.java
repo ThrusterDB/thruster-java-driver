@@ -26,7 +26,7 @@ public class Component extends JSONObject {
     private Graph parentGraph;
     private boolean debug;
 
-    Component() {
+    public Component() {
 
         /* set UUID */
         this.ref = UUID.randomUUID().toString();
@@ -54,17 +54,30 @@ public class Component extends JSONObject {
         }
     }
 
+    public Component(JSONObject obj) {
+        super();
+
+        try {
+            this.setId(obj.get("id"));
+            this.setProperty(obj.getJSONObject("prop"));
+            this.setMeta(obj.getJSONObject("meta"));
+            this.setComputed(obj.getJSONObject("comp"));
+        } catch (JSONException e) {
+            System.out.println(e);
+        }
+    }
+
     /*======================== GETTERS & SETTERS =======================*/
 
-    public String getId() {
+    public Object getId() {
         try {
-            return this.get("id").toString();
+            return this.get("id");
         } catch (JSONException ex) {
             throw new RuntimeException("An error occurred while getting the ID of a component.", ex);
         }
     }
 
-    public void setId(String value) {
+    public void setId(Object value) {
         try {
             this.put("id", value);
         } catch (JSONException ex) {
@@ -135,6 +148,15 @@ public class Component extends JSONObject {
         }
     }
 
+    public boolean setProperty(JSONObject json) {
+        try {
+            this.put("prop", json);
+            return true;
+        } catch (JSONException ex) {
+            throw  new RuntimeException("An error occurred while setting the property of a component", ex);
+        }
+    }
+
     public boolean setProperty(String prop, Object value) {
         try {
             ((JSONObject) this.get("prop")).put(prop, value);
@@ -168,6 +190,15 @@ public class Component extends JSONObject {
             return (JSONObject) this.get("comp");
         } catch (JSONException ex) {
             throw new RuntimeException("An error occurred while retrieving the computed field of a component.", ex);
+        }
+    }
+
+    public boolean setComputed(JSONObject json) {
+        try {
+            this.put("comp", json);
+            return true;
+        } catch (JSONException ex) {
+            throw new RuntimeException("An error occurred while setting the computed property of a component.", ex);
         }
     }
 
@@ -252,6 +283,15 @@ public class Component extends JSONObject {
         }
     }
 
+    public boolean setMeta(JSONObject json) {
+        try {
+            this.put("meta", json);
+            return true;
+        } catch (JSONException ex) {
+            throw new RuntimeException("An error occurred while setting the meta property of a component.", ex);
+        }
+    }
+
     /*=========================== VALIDATION ===========================*/
 
     void validateGraphLabel() {
@@ -264,6 +304,7 @@ public class Component extends JSONObject {
             this.setId(this.getLabel());
         }
     }
+
     /*======================== REMOTE OPERATIONS =======================*/
 
     /**
@@ -277,15 +318,17 @@ public class Component extends JSONObject {
         this.validateGraphLabel();
 
         /* validate edge source and target */
-        if (this.type.equals("e") && (!((Edge) this).hasSource()) || !(((Edge) this).hasTarget())) {
-            throw new Error("Edge source and target are required");
+        if (this.type.equals("e")) {
+            if ( (!((Edge)this).hasSource())  || (!((Edge)this).hasTarget()) ) {
+                throw new Error("Edge source and target are required");
+            }
         }
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
         try {
-            payload.put("graph", this.getLabel());
+            payload.put("graph", this.parentGraph.getLabel());
             payload.put("type", this.type);
             payload.put("obj", this);
 
@@ -310,7 +353,8 @@ public class Component extends JSONObject {
 
         this.parentGraph.getConn().call(apiFun, msg).then((message) -> {
             try {
-                this.setId(message.get("id").toString());
+                System.out.println("message --> " + message);
+                this.setId(((JSONObject)message.getJSONArray("result").get(1)).get("_id"));
                 deferred.resolve(message);
             } catch (JSONException ex) {
                 throw new RuntimeException("Error while manipulating JSON object - persist", ex);
@@ -335,7 +379,7 @@ public class Component extends JSONObject {
 
         if (this.type.equals("g") && cmp != null) {
             this.validateCmp(cmp);
-        } else if ((cmp = this.getId()).isEmpty()) {
+        } else if (this.getId() == null ) {
             throw new Error("Component ID is required");
         }
 
@@ -397,5 +441,16 @@ public class Component extends JSONObject {
 
     void printDebug(String msg, String function, String payload) {
         System.out.println("DEBUG[" + msg + "]: " + function + " " + payload);
+    }
+
+    /*============================== OTHERS ============================*/
+
+    @Override
+    public String toString() {
+        return "{"
+            + "id: " + this.getId()
+            + ", prop: " + this.properties()
+            + ", meta: " + this.get("meta")
+            + ", comp: " + this.computed() + "}";
     }
 }

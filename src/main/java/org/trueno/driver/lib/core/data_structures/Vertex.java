@@ -23,8 +23,7 @@ public class Vertex extends Component {
     public Vertex() {
 
         try {
-            this.put("partition", "");
-
+            this.put("partition", 0);
             this.setType("v");
 
         } catch (JSONException ex) {
