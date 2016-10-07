@@ -6,8 +6,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 /**
- * Created by victor on 9/6/16.
+ * Created by: victor, miguel
+ * Date: 9/6/16
+ * Purpose:
  */
+
 public class Filter {
 
     private ArrayList<JSONObject> filters;
@@ -18,7 +21,7 @@ public class Filter {
      */
     public Filter() {
 
-        this.filters = new ArrayList<JSONObject>();
+        this.filters = new ArrayList<>();
         this.ftr = "";
     }
 
@@ -54,7 +57,7 @@ public class Filter {
             json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
             filters.add(json);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
 
         /* reset filter */
@@ -83,7 +86,7 @@ public class Filter {
             json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
             filters.add(json);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
 
         /* reset filter */
@@ -107,7 +110,7 @@ public class Filter {
             json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
             filters.add(json);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
         /* reset filter */
         this.ftr = "";
@@ -132,7 +135,7 @@ public class Filter {
             json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
             filters.add(json);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
 
         /* reset filter */
@@ -158,7 +161,7 @@ public class Filter {
             json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
             filters.add(json);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
 
         /* reset filter */
@@ -184,7 +187,7 @@ public class Filter {
             json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
             filters.add(json);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
 
         /* reset filter */
@@ -206,7 +209,7 @@ public class Filter {
             json.put("type", "size");
             json.put("val", val);
         } catch (Exception e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while manipulating JSON Object", e);
         }
         /* set object */
         filters.add(json);

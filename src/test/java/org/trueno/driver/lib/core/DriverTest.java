@@ -27,16 +27,15 @@ public class DriverTest {
 
         Filter filter = g.filter().term("prop.age", 65);
 
-        g.fetch("v", filter).then((result) -> {
+        g.fetch("v").then((result) -> {
             System.out.println("fetch 1.1: " + result);
         });
 
-        g.fetch("v").then(result -> {
+
+        g.fetch("v", filter).then(result -> {
             System.out.println("fetch() 2.3 -> " + result.toString());
         }).then(fn -> {
             trueno.disconnect();
         });
-
     }
-
 }

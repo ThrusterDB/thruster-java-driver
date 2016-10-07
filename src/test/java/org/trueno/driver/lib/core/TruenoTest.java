@@ -1,22 +1,18 @@
 package org.trueno.driver.lib.core;
 
+import org.jdeferred.Promise;
 import org.json.JSONObject;
 import org.junit.*;
-
-import static org.junit.Assert.*;
-
-import org.junit.experimental.ParallelComputer;
-import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
 
-import java.util.concurrent.TimeUnit;
+import static org.junit.Assert.*;
 
 /**
  * @author Miguel Rivera
- * Date: 9/20/16
- * Purpose:
+ *         Date: 9/20/16
+ *         Purpose:
  */
 
 @FixMethodOrder(MethodSorters.JVM)
@@ -32,15 +28,14 @@ public class TruenoTest {
             Thread.sleep(750);
 
             assertTrue(trueno.isConnected());
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
 
     }
 
     @AfterClass
-    public static void DisconnectDatabase() {
+    public static void Disconnect() {
         if (!trueno.isConnected()) {
             fail("Trueno Database could not connect");
         }
@@ -50,8 +45,6 @@ public class TruenoTest {
 
     @Test
     public void CreateGraph() {
-        System.out.println("------------------------Properties, computed, and meta-------------------------------");
-
         /* instantiate graph */
         Graph g = trueno.Graph("graphi");
 
@@ -61,103 +54,57 @@ public class TruenoTest {
         g.setComputed("pagerank", "average", 2.55);
         g.setComputed("pagerank", "low", 1);
 
-        try {
-            g.create().then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        doPromise(g.create(), "");
     }
 
     @Test
     public void CountVerticesInGraph() {
-        System.out.println("------------------------Properties, computed, and meta-------------------------------");
-
         /* instantiate graph */
         Graph g = trueno.Graph("graphi");
 
         Filter filter = g.filter().term("prop.name", "aura");
 
-        try {
-            g.count("v", filter).then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
+        doPromise(g.count("v", filter), "");
 
-            g.count("v").then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        doPromise(g.count("v"), "");
     }
 
     @Test
     public void FetchGraphFromDB() {
-        System.out.println("------------------------Properties, computed, and meta-------------------------------");
-
-            /* instantiate graph */
+        /* instantiate graph */
         Graph g = trueno.Graph("graphi");
 
         Filter filter = g.filter().term("prop.version", 1);
-
         Filter filter2 = g.filter().term("prop.name", "aura");
 
-        try {
-            g.fetch("g", filter).then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
+        doPromise(g.fetch("g", filter), "");
 
-            g.fetch("v", filter2).then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
+        doPromise(g.fetch("v", filter2), "");
 
-            g.fetch("e").then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        doPromise(g.fetch("e"), "");
     }
 
     @Test
     public void DeleteGraph() {
-        System.out.println("------------------------Properties, computed, and meta-------------------------------");
-
         /* instantiate graph */
         Graph g = trueno.Graph("graphi");
 
-        /* Adding properties and computed fields */
-        g.setProperty("version", 1);
+        doPromise(g.destroy("v", new Filter()), "");
+    }
 
-        g.setComputed("pagerank", "average", 2.55);
-        g.setComputed("pagerank", "low", 1);
+    private void doPromise(Promise<JSONObject, JSONObject, Integer> p, String assertion) {
+        final String[] retMsg = new String[1];
+
+        p.then(message -> {
+            retMsg[0] = message.toString();
+        }, error -> fail(error.toString()));
 
         try {
-            g.destroy().then(message -> {
-                System.out.println(message.toString());
-                assertEquals("", message.toString());
-            }, error -> {
-                System.out.println(error.toString());
-            });
+            Thread.sleep(500);
+
+            assertTrue(p.isResolved());
+
+            assertEquals(assertion, retMsg[0]);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

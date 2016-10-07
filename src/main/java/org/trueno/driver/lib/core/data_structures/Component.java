@@ -347,7 +347,7 @@ public class Component extends JSONObject {
 
             if (this.type.equals("g")) {
                 payload.put("type", cmp);
-                payload.put("ftr", ftr != null ? ftr : new Filter());
+                payload.put("ftr", ftr != null ? ftr : new Filter().getFilters());
             } else {
                 payload.put("type", this.type);
                 payload.put("obj", new JSONObject().put("id", this.getId()));

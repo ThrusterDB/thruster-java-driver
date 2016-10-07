@@ -97,33 +97,31 @@ public class Vertex extends Component {
         /* Extracting promise */
         Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
-//        this.getParentGraph().getConn().call(apiFun, msg).then((DoneCallback<JSONObject> message) -> {
-//            message.onDone(d -> {
-//                if (cmpType.equals("v")) {
-//                    JSONArray vertices = new JSONArray();
-//                    Vertex v;
-//
-//                    for (Iterator it = d.keys(); it.hasNext(); ) {
-//                        v = new Vertex();
-//                        v.setProperty("_source", it.next().toString());
-//                        vertices.put(v);
-//                    }
-//
-//                    deferred.resolve(vertices);
-//                } else {
-//                    JSONArray edges = new JSONArray();
-//                    Edge e;
-//
-//                    for (Iterator it = d.keys(); it.hasNext(); ) {
-//                        e = new Edge();
-//                        e.setSource(it.next().toString());
-//                        edges.put(e);
-//                    }
-//
-//                    deferred.resolve(edges);
-//                }
-//            });
-//        }, deferred::reject);
+        this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
+            if (cmpType.equals("v")) {
+                JSONArray vertices = new JSONArray();
+                Vertex v;
+
+                for (Iterator it = message.keys(); it.hasNext(); ) {
+                    v = new Vertex();
+                    v.setProperty("_source", it.next().toString());
+                    vertices.put(v);
+                }
+
+                deferred.resolve(new JSONObject(vertices));
+            } else {
+                JSONArray edges = new JSONArray();
+                Edge e;
+
+                for (Iterator it = message.keys(); it.hasNext(); ) {
+                    e = new Edge();
+                    e.setSource(it.next().toString());
+                    edges.put(e);
+                }
+
+                deferred.resolve(new JSONObject(edges));
+            }
+        }, deferred::reject);
 
         return promise;
     }
