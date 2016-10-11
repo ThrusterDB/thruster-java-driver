@@ -1,8 +1,6 @@
 package org.trueno.driver.lib.core.data_structures;
 
 import org.jdeferred.Deferred;
-import org.jdeferred.DoneCallback;
-import org.jdeferred.FailCallback;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONException;
@@ -12,15 +10,15 @@ import org.trueno.driver.lib.core.communication.RPC;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.InputMismatchException;
-import java.util.concurrent.CompletableFuture;
 
 /**
- * Created by: victor
- * Date: 7/19/16
- * Purpose:
+ * <b>Graph Class</b>
+ * <p>TruenoDB Graph primitive dta structure.</p>
+ *
+ * @author Victor Santos
+ * @author Miguel Rivera
+ * @version 0.1.0
  */
-
 public class Graph extends Component {
 
     private RPC conn;
@@ -29,7 +27,9 @@ public class Graph extends Component {
     private HashMap<String, Edge> edges;
     private HashMap<String, Vertex> vertices;
 
-    /* invoke super constructor */
+    /**
+     * Default constructor. Initializes a Graph structure.
+     */
     public Graph() {
         /* init bulk operations */
         this.bulkOperations = new ArrayList<>();
@@ -44,33 +44,62 @@ public class Graph extends Component {
         this.vertices = new HashMap<>();
     }
 
-    /*======================== GETTERS & SETTERS =======================*/
 
+    /**
+     * Returns whether the driver is sending bulk transactions to the remote Trueno DB.
+     *
+     * @return true if bulk is enabled, false otherwise.
+     */
     public boolean isBulkOpen() {
         return isBulkOpen;
     }
 
+    /**
+     * RPC connection object of this Graph
+     *
+     * @return connection RPC object
+     */
     public RPC getConn() {
         return conn;
     }
 
+    /**
+     * Returns an array of Edges in this Graph
+     *
+     * @return array of Edges
+     */
     public Edge[] edges() {
         return (Edge[]) edges.values().toArray();
     }
 
+    /**
+     * Returns an array of Vertices in this Graph
+     *
+     * @return array of Vertices
+     */
     public Vertex[] vertices() {
         return (Vertex[]) vertices.values().toArray();
     }
 
+    /**
+     * Sets the RPC connection object to be used by this Graph
+     *
+     * @param conn
+     *         RPC connection object
+     */
     public void setConn(RPC conn) {
         this.conn = conn;
     }
 
+    /**
+     * Sets this Graph to do send any updates to the remote DB in bulk.
+     *
+     * @param bulkOpen
+     *         true if bulk operations will be enabled, false if they will be disabled
+     */
     public void setBulkOpen(boolean bulkOpen) {
         isBulkOpen = bulkOpen;
     }
-
-    /*======================== OPERATIONS =======================*/
 
     /**
      * Creates a new filter to be applied to corresponding operations.
@@ -132,8 +161,10 @@ public class Graph extends Component {
     /**
      * Pushes the operation string and parameter into the bulk list.
      *
-     * @param op  The operation to be inserted into the bulk list.
-     * @param obj The operation object.
+     * @param op
+     *         The operation to be inserted into the bulk list.
+     * @param obj
+     *         The operation object.
      */
     public void pushOperation(String op, JSONObject obj) {
 
@@ -149,11 +180,11 @@ public class Graph extends Component {
         this.bulkOperations.add(json);
     }
 
-    /*======================== REMOTE OPERATIONS =======================*/
-
     /**
-     * Fetchs components from Elastic Search.
+     * Fetch components from Elastic Search.
      *
+     * @param cmp
+     *         the component string for the search
      * @return The requested instantiated set of components.
      */
     public Promise<JSONObject, JSONObject, Integer> fetch(String cmp) {
@@ -161,18 +192,19 @@ public class Graph extends Component {
     }
 
     /**
-     * Fetchs components from Elastic Search.
+     * Fetch components from Elastic Search.
      *
+     * @param cmp
+     *         the component string for the search
+     * @param ftr
+     *         Filter for the results of the search
      * @return The requested instantiated set of components.
      */
     public Promise<JSONObject, JSONObject, Integer> fetch(String cmp, Filter ftr) {
+        final String apiFunc = "ex_fetch";
 
         /* Validate the component */
         this.validateCmp(cmp);
-
-        /* This object reference */
-        final Graph self = this;
-        final String apiFunc = "ex_fetch";
 
         /* If label is not present throw error */
         this.validateGraphLabel();
@@ -195,36 +227,22 @@ public class Graph extends Component {
             msg.setPayload(payload);
 
         } catch (JSONException e) {
-            System.out.println(e);
+            throw new RuntimeException("Error while constructing JSON Object", e);
         }
 
         /* if debug display operation params */
         if (this.getDebug()) {
-            System.out.println("DEBUG[fetch]: " + apiFunc + "\n" + msg.toString());
+            printDebug("fetch", apiFunc, msg.toString());
         }
 
-        /* Instantiating deferred object */
-        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-        /* Extracting promise */
-        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-        this.conn.call(apiFunc, msg).then(o -> {
-            try {
-                deferred.resolve(o);
-            } catch (Exception e) {
-                System.out.println(e);
-            }
-        }, o -> {
-            try {
-                deferred.reject(o);
-            } catch (Exception e) {
-                System.out.println(e);
-            }
-        });
-
-        return promise;
+        return this.conn.call(apiFunc, msg);
     }
 
+    /**
+     * Open a Graph in the remote database.
+     *
+     * @return Promise with Graph result
+     */
     public Promise<JSONObject, JSONObject, Integer> open() {
 
         final String apiFunc = "ex_open";
@@ -248,12 +266,12 @@ public class Graph extends Component {
             msg.setPayload(payload);
 
         } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object - fetch", e);
+            throw new RuntimeException("Error while constructing JSON Object - open", e);
         }
 
         /* if debug display operation params */
         if (this.getDebug()) {
-            printDebug("open ", apiFunc, msg.toString());
+            printDebug("open", apiFunc, msg.toString());
         }
 
         return this.conn.call(apiFunc, msg);
@@ -262,7 +280,8 @@ public class Graph extends Component {
     /**
      * Count components at the remote database.
      *
-     * @param cmp The component type, can be 'v','V', 'e','E', 'g', or 'G'
+     * @param cmp
+     *         The component type, can be 'v','V', 'e','E', 'g', or 'G'
      * @return Promise with the count result.
      */
     public Promise<JSONObject, JSONObject, Integer> count(String cmp) {
@@ -272,8 +291,10 @@ public class Graph extends Component {
     /**
      * Count components at the remote database.
      *
-     * @param cmp The component type, can be 'v','V', 'e','E', 'g', or 'G'
-     * @param ftr The filter to be applied
+     * @param cmp
+     *         The component type, can be 'v','V', 'e','E', 'g', or 'G'
+     * @param ftr
+     *         The filter to be applied
      * @return Promise with the count result.
      */
     public Promise<JSONObject, JSONObject, Integer> count(String cmp, Filter ftr) {
@@ -315,6 +336,11 @@ public class Graph extends Component {
         return this.conn.call(apiFun, msg);
     }
 
+    /**
+     * Create a new Graph in the remote database
+     *
+     * @return Promise with the creation result.
+     */
     public Promise<JSONObject, JSONObject, Integer> create() {
         final String apiFunc = "ex_create";
 
@@ -349,6 +375,11 @@ public class Graph extends Component {
         return this.conn.call(apiFunc, msg);
     }
 
+    /**
+     * Perform Graph operations in batch mode
+     *
+     * @return Promise with the bulk operation result
+     */
     public Promise<JSONObject, JSONObject, Integer> bulk() {
         final String apiFunc = "ex_bulk";
 

@@ -5,22 +5,24 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
 
-import java.util.IntSummaryStatistics;
-import java.util.concurrent.CompletableFuture;
-
 /**
- * Created by: victor, miguel
- * Date: 7/19/16
- * Purpose:
+ * <b>Edge Class</b>
+ * <p>TruenoDB Edge primitive data structure class.</p>
+ *
+ * @author Victor Santos
+ * @author Miguel Rivera
+ * @version 0.1.0
  */
+public class Edge extends Component {
 
-class Edge extends Component {
-
-    Edge() {
+    /**
+     * Initializes a new Edge
+     */
+    public Edge() {
         try {
             this.put("source", "");
             this.put("target", "");
-            this.put("partition",  "");
+            this.put("partition", "");
 
             this.setType("e");
 
@@ -29,6 +31,11 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Returns the source of this Edge
+     *
+     * @return Edge source
+     */
     public String getSource() {
         try {
             return this.get("source").toString();
@@ -37,6 +44,12 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Sets the source of this Edge
+     *
+     * @param source
+     *         new Edge source
+     */
     public void setSource(String source) {
         try {
             this.put("source", source);
@@ -45,6 +58,11 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Returns whether the source of this Edge is set
+     *
+     * @return true if source is set, false otherwise.
+     */
     boolean hasSource() {
         try {
             return this.has("source") && !this.get("source").toString().isEmpty();
@@ -53,6 +71,11 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Returns the target of this Edge
+     *
+     * @return Edge target
+     */
     public String getTarget() {
         try {
             return this.get("target").toString();
@@ -61,6 +84,12 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Sets the target of this Edge
+     *
+     * @param target
+     *         new Edge target
+     */
     public void setTarget(String target) {
         try {
             this.put("source", target);
@@ -69,6 +98,11 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Returns whether the target of this Edge is set
+     *
+     * @return true if targe is set, false otherwise.
+     */
     boolean hasTarget() {
         try {
             return this.has("target") && !this.get("target").toString().isEmpty();
@@ -77,6 +111,11 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Returns the partition of this Edge
+     *
+     * @return Edge partition
+     */
     public String getPartition() {
         try {
             return this.get("partition").toString();
@@ -85,6 +124,12 @@ class Edge extends Component {
         }
     }
 
+    /**
+     * Sets the partition of this Edge
+     *
+     * @param partition
+     *         new Edge partition
+     */
     public void setPartition(String partition) {
         try {
             this.put("partition", partition);
@@ -93,14 +138,24 @@ class Edge extends Component {
         }
     }
 
-    Filter filter() {
+    /**
+     * Returns a new filter to be applied on this Edge
+     *
+     * @return new Edge filter
+     */
+    public Filter filter() {
         return new Filter();
     }
 
+    /**
+     * Returns the vertices connected to this Edge
+     *
+     * @return Promise with the vertices search result.
+     */
     public Promise<JSONObject, JSONObject, Integer> vertices() {
         final String apiFun = "ex_vertices";
 
-        if(!this.hasId()) {
+        if (!this.hasId()) {
             throw new Error("Edge id is required, set this edge instance id or load edge.");
         }
 

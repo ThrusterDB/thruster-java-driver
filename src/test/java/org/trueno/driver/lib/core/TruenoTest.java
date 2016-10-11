@@ -10,14 +10,14 @@ import org.trueno.driver.lib.core.data_structures.Graph;
 import static org.junit.Assert.*;
 
 /**
+ * TruenoDB Test suite – Test connection, creation of Graphs, Graph operations.
+ *
  * @author Miguel Rivera
- *         Date: 9/20/16
- *         Purpose:
+ * @version 0.1.0
  */
 
 @FixMethodOrder(MethodSorters.JVM)
 public class TruenoTest {
-
     private final static Trueno trueno = new Trueno("http://localhost", 8000);
 
     @BeforeClass
@@ -31,7 +31,6 @@ public class TruenoTest {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
     }
 
     @AfterClass
@@ -100,7 +99,7 @@ public class TruenoTest {
         }, error -> fail(error.toString()));
 
         try {
-            Thread.sleep(500);
+            Thread.sleep(250);
 
             assertTrue(p.isResolved());
 
