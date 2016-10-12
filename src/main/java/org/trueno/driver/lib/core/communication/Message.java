@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Message extends JSONObject {
 
-    private final Logger log = LoggerFactory.getLogger(Message.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Message.class.getName());
 
     /**
      * Initializes a Message with empty fields

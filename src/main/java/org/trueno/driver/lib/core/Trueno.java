@@ -15,8 +15,9 @@ import org.trueno.driver.lib.core.data_structures.Edge;
 import org.trueno.driver.lib.core.data_structures.Graph;
 import org.trueno.driver.lib.core.data_structures.Vertex;
 
+import java.io.IOException;
 import java.util.Iterator;
-import java.util.concurrent.CompletableFuture;
+import java.util.logging.LogManager;
 
 /**
  * TruenoDB Java Driver – Provides interaction with the Trueno Database
@@ -35,7 +36,7 @@ public class Trueno {
     private RPC rpc;
     private boolean isConnected;
 
-    private final Logger log = LoggerFactory.getLogger(Trueno.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Trueno.class.getName());
 
     /**
      * Default Constructor. Initializes TruenoDB connection parameters to localhost:8000
@@ -47,6 +48,14 @@ public class Trueno {
         this.port = 8000;
         this.isConnected = false;
         this.rpc = new RPC(this.host, this.port);
+
+        try {
+            System.setProperty("java.util.logging.config.file", this.getClass().getClassLoader().getResource("logging.properties").getPath());
+            LogManager.getLogManager().readConfiguration();
+        }
+        catch (IOException | NullPointerException ex) {
+            log.info("Logging – Could not find TruenoDB Driver logging configuration file – Using JRE default configuration", ex);
+        }
 
         log.trace("Trueno Object created");
     }

@@ -16,7 +16,7 @@ import org.trueno.driver.lib.core.communication.Message;
  */
 public class Edge extends Component {
 
-    private final Logger log = LoggerFactory.getLogger(Edge.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Edge.class.getName());
 
     /**
      * Initializes a new Edge

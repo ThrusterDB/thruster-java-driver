@@ -19,7 +19,7 @@ public class Filter {
     private ArrayList<JSONObject> filters;
     private String ftr;
 
-    private final Logger log = LoggerFactory.getLogger(Filter.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Filter.class.getName());
 
     /**
      * Create a Filter object instance.

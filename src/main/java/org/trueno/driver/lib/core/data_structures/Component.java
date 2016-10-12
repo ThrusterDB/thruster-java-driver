@@ -24,7 +24,7 @@ public class Component extends JSONObject {
     private String type;
     private Graph parentGraph;
 
-    private final Logger log = LoggerFactory.getLogger(Component.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Component.class.getName());
 
     /**
      * Default constructor.

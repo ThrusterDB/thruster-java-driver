@@ -22,7 +22,7 @@ import java.util.Iterator;
 
 public class Vertex extends Component {
 
-    private final Logger log = LoggerFactory.getLogger(Vertex.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Vertex.class.getName());
 
     /**
      * Create a Vertex instance

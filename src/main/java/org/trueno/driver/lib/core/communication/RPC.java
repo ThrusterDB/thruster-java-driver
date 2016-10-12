@@ -11,9 +11,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.lang.reflect.Method;
+import java.util.logging.LogManager;
 
 /**
  * <b>RPC Class</b>
@@ -30,7 +32,7 @@ public class RPC {
     private HashMap<String, Method> procedures;
     private Socket socket;
 
-    private final Logger log = LoggerFactory.getLogger(RPC.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(RPC.class.getName());
     
     /**
      * Default Constructor
@@ -42,6 +44,8 @@ public class RPC {
         this.port = 8000;
         this.procedures = new HashMap<>();
         this.socket = null;
+
+        log.trace("RPC Object created");
     }
 
     /**

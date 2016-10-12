@@ -28,7 +28,7 @@ public class Graph extends Component {
     private HashMap<String, Edge> edges;
     private HashMap<String, Vertex> vertices;
 
-    private final Logger log = LoggerFactory.getLogger(Graph.class.getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(Graph.class.getName());
 
     /**
      * Default constructor. Initializes a Graph structure.
