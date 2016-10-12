@@ -464,18 +464,4 @@ public class Component extends JSONObject {
         }
         return true;
     }
-
-    /**
-     * Logs debug information to console and/or file.
-     *
-     * @param msg
-     *         output message
-     * @param function
-     *         calling function
-     * @param payload
-     *         payload sent to DB
-     */
-    void logDebug(String msg, String function, String payload) {
-        System.out.println("DEBUG[" + msg + "]: " + function + " " + payload);
-    }
 }
