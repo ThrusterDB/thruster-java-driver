@@ -4,8 +4,9 @@ import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Callback;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
@@ -29,11 +30,12 @@ import java.util.concurrent.CompletableFuture;
 public class Trueno {
 
     /* Private properties */
-    private boolean debug;
     private String host;
     private int port;
     private RPC rpc;
     private boolean isConnected;
+
+    private final Logger log = LoggerFactory.getLogger(Trueno.class.getSimpleName());
 
     /**
      * Default Constructor. Initializes TruenoDB connection parameters to localhost:8000
@@ -46,6 +48,7 @@ public class Trueno {
         this.isConnected = false;
         this.rpc = new RPC(this.host, this.port);
 
+        log.trace("Trueno Object created");
     }
 
     /**
@@ -64,6 +67,8 @@ public class Trueno {
         this.host = host != null ? host : this.host;
         this.port = port != null ? port : this.port;
         this.rpc = new RPC(this.host, this.port);
+
+        log.trace("Overloaded Trueno Object created – Host: {} Port: {}", host, port);
     }
 
     /**
@@ -78,9 +83,11 @@ public class Trueno {
         /* Connect the rpc object */
         this.rpc.connect(socket -> {
             this.isConnected = true;
+            log.trace("Trueno connected");
             connCallback.method(socket);
         }, socket -> {
             this.isConnected = false;
+            log.trace("Trueno disconnected");
             discCallback.method(socket);
         });
     }
@@ -92,24 +99,6 @@ public class Trueno {
         rpc.disconnect();
     }
 
-    /**
-     * Returns if debugging information is enabled on the driver.
-     *
-     * @return true if debug is set, false otherwise.
-     */
-    public boolean isDebug() {
-        return debug;
-    }
-
-    /**
-     * Sets the output of debug information on the driver.
-     *
-     * @param debug
-     *         new status of the debug information output.
-     */
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
 
     /**
      * Returns the hostname value in use by the driver.
@@ -187,7 +176,6 @@ public class Trueno {
 
         Graph g = new Graph();
         g.setConn(this.rpc);
-        g.setDebug(this.debug);
         g.setLabel(label);
 
         return g;
@@ -206,13 +194,8 @@ public class Trueno {
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-        try {
-            payload.put("q", query);
-            msg.setPayload(payload);
-
-        } catch (JSONException ex) {
-            throw new RuntimeException("Error ocurred while manipulating JSON Object - query", ex);
-        }
+        payload.put("q", query);
+        msg.setPayload(payload);
 
         /* Instantiating deferred object */
         final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();

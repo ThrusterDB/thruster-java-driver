@@ -1,8 +1,9 @@
 package org.trueno.driver.lib.core.data_structures;
 
 import org.jdeferred.Promise;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 
 import java.util.*;
@@ -22,40 +23,31 @@ public class Component extends JSONObject {
     private String ref;
     private String type;
     private Graph parentGraph;
-    private boolean debug;
+
+    private final Logger log = LoggerFactory.getLogger(Component.class.getSimpleName());
 
     /**
      * Default constructor.
-     *
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     Component() {
-
         /* set UUID */
         this.ref = UUID.randomUUID().toString();
 
         /* Initialize JSON properties */
-        try {
-            //Initially, no debugging
-            debug = false;
+        /* setting id */
+        this.put("id", "");
 
-            /* setting id */
-            this.put("id", "");
+        /* setting label */
+        this.put("label", "");
 
-            /* setting label */
-            this.put("label", "");
+        /* Setting property fields */
+        this.put("prop", new JSONObject());
+        /* Setting computed fields */
+        this.put("comp", new JSONObject());
+        /* Setting meta fields */
+        this.put("meta", new JSONObject());
 
-            /* Setting property fields */
-            this.put("prop", new JSONObject());
-            /* Setting computed fields */
-            this.put("comp", new JSONObject());
-            /* Setting meta fields */
-            this.put("meta", new JSONObject());
-
-        } catch (JSONException ex) {
-            throw new RuntimeException("Error while manipulating JSON Object", ex);
-        }
+        log.trace("Component Object created");
     }
 
     /**
@@ -63,35 +55,25 @@ public class Component extends JSONObject {
      *
      * @param obj
      *         JSONObject with preset keys id, prop (properties), meta and comp (computed).
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     Component(JSONObject obj) {
         super();
 
-        try {
-            this.setId(obj.get("id"));
-            this.setProperty(obj.getJSONObject("prop"));
-            this.setMeta(obj.getJSONObject("meta"));
-            this.setComputed(obj.getJSONObject("comp"));
-        } catch (JSONException ex) {
-            throw new RuntimeException("Error while manipulating JSON Object", ex);
-        }
+        this.setId(obj.get("id"));
+        this.setProperty(obj.getJSONObject("prop"));
+        this.setMeta(obj.getJSONObject("meta"));
+        this.setComputed(obj.getJSONObject("comp"));
+
+        log.trace("Overloaded Component Object created");
     }
 
     /**
      * Returns the value associated with the ID of this Component.
      *
      * @return the ID of this Component
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public Object getId() {
-        try {
-            return this.get("id");
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the ID of a component.", ex);
-        }
+        return this.get("id");
     }
 
     /**
@@ -99,45 +81,27 @@ public class Component extends JSONObject {
      *
      * @param value
      *         the new ID value.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public void setId(Object value) {
-        try {
-            this.put("id", value);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the ID of a component.", ex);
-        }
+        this.put("id", value);
     }
 
     /**
      * Returns whether the ID property is set.
      *
      * @return true if ID is set, false otherwise.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public boolean hasId() {
-        try {
-            return this.has("id") && !this.get("id").toString().isEmpty();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while checking the ID of a component.", ex);
-        }
+        return this.has("id") && !this.get("id").toString().isEmpty();
     }
 
     /**
      * Returns the value associated with the label of this Component.
      *
      * @return the label of this Component
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public String getLabel() {
-        try {
-            return this.get("label").toString();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the label of a component.", ex);
-        }
+        return this.get("label").toString();
     }
 
     /**
@@ -145,15 +109,9 @@ public class Component extends JSONObject {
      *
      * @param value
      *         the new label value.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public void setLabel(String value) {
-        try {
-            this.put("label", value);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the label of a component.", ex);
-        }
+        this.put("label", value);
     }
 
     /**
@@ -179,8 +137,6 @@ public class Component extends JSONObject {
      *
      * @param type
      *         the new type value (v = vertex, e = edge).
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public void setType(String type) {
         this.type = type;
@@ -206,38 +162,12 @@ public class Component extends JSONObject {
     }
 
     /**
-     * Returns whether debugging information for this Component is set.
-     *
-     * @return true if debugging information is enabled, false otherwise.
-     */
-    public boolean getDebug() {
-        return this.debug;
-    }
-
-    /**
-     * Set the output of debugging information for this Component.
-     *
-     * @param debug
-     *         true if debugging information should be displayed, false otherwise.
-     */
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-
-    /**
      * Returns the properties of this Component in JSON format.
      *
      * @return the properties of this Component.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public JSONObject properties() {
-        try {
-            return (JSONObject) this.get("prop");
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while retrieving the properties of a component.", ex);
-        }
+        return (JSONObject) this.get("prop");
     }
 
     /**
@@ -246,15 +176,9 @@ public class Component extends JSONObject {
      * @param prop
      *         value of the desired property.
      * @return the value of the specified property.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public Object getProperty(String prop) {
-        try {
-            return ((JSONObject) this.get("prop")).get(prop);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the property of a component.", ex);
-        }
+        return ((JSONObject) this.get("prop")).get(prop);
     }
 
     /**
@@ -263,16 +187,9 @@ public class Component extends JSONObject {
      * @param prop
      *         the value of the new property.
      * @return true if the update is successful.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
-    public boolean setProperty(JSONObject prop) {
-        try {
-            this.put("prop", prop);
-            return true;
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the property of a component", ex);
-        }
+    public void setProperty(JSONObject prop) {
+        this.put("prop", prop);
     }
 
     /**
@@ -284,13 +201,8 @@ public class Component extends JSONObject {
      *         the new value of the property being updated.
      * @return true if the update is successful.
      */
-    public boolean setProperty(String prop, Object value) {
-        try {
-            ((JSONObject) this.get("prop")).put(prop, value);
-            return true;
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the property of a component.", ex);
-        }
+    public void setProperty(String prop, Object value) {
+        ((JSONObject) this.get("prop")).put(prop, value);
     }
 
     /**
@@ -300,44 +212,26 @@ public class Component extends JSONObject {
      *         the property to be removed.
      * @return true if the operation was successful.
      */
-    public boolean removeProperty(String prop) {
-        try {
-            ((JSONObject) this.get("prop")).remove(prop);
-            return true;
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while removing the property of a component.", ex);
-        }
+    public void removeProperty(String prop) {
+        ((JSONObject) this.get("prop")).remove(prop);
     }
 
     /**
      * Returns the computed field of this Component in JSON format.
      *
      * @return the contents of the computed field of this Component.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public JSONObject computed() {
-        try {
-            return (JSONObject) this.get("comp");
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while retrieving this computed field of a component.", ex);
-        }
+        return (JSONObject) this.get("comp");
     }
 
     /**
      * Sets the computed field of this Component.
      *
      * @return true if the operation was successful.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
-    public boolean setComputed(JSONObject json) {
-        try {
-            this.put("comp", json);
-            return true;
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting this computed property of a component.", ex);
-        }
+    public void setComputed(JSONObject json) {
+        this.put("comp", json);
     }
 
     /**
@@ -347,28 +241,22 @@ public class Component extends JSONObject {
      *         the algorithm that contains the property.
      * @param prop
      *         the property that will be retrieved.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public Object getComputed(String algo, String prop) {
+        JSONObject comp = (JSONObject) this.get("comp");
 
-        try {
-            JSONObject comp = (JSONObject) this.get("comp");
-
-             /* if algo not present, throw error */
-            if (!comp.has(algo)) {
-                throw new Error("Provided algorithm(" + algo + ") is not present");
-            }
-            if (!((JSONObject) comp.get(algo)).has(prop)) {
-                throw new Error("Provided algorithm property(" + prop + ") is not present");
-            }
-
-            /* return property of this algorithm */
-            return ((JSONObject) comp.get(algo)).get(prop);
-
-        } catch (Exception ex) {
-            throw new RuntimeException("An error occurred while getting this computed property of a component.", ex);
+        /* if algo not present, throw error */
+        if (!comp.has(algo)) {
+            log.error("Provided algorithm(" + algo + ") is not present");
+            return null;
         }
+        if (!((JSONObject) comp.get(algo)).has(prop)) {
+            log.error("Provided algorithm property(" + prop + ") is not present");
+            return null;
+        }
+
+        /* return property of this algorithm */
+        return ((JSONObject) comp.get(algo)).get(prop);
     }
 
     /**
@@ -378,28 +266,23 @@ public class Component extends JSONObject {
      *         the algorithm which will have a property removed.
      * @param prop
      *         the property that will be removed.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public boolean removeComputed(String algo, String prop) {
-        try {
-            JSONObject comp = (JSONObject) this.get("comp");
+        JSONObject comp = (JSONObject) this.get("comp");
 
-             /* if algo not present, throw error */
-            if (!comp.has(algo)) {
-                throw new Error("Provided algorithm(" + algo + ") is not present");
-            }
-            if (!((JSONObject) comp.get(algo)).has(prop)) {
-                throw new Error("Provided algorithm property(" + prop + ") is not present");
-            }
-
-            ((JSONObject) comp.get(algo)).remove(prop);
-
-            return true;
-
-        } catch (Exception ex) {
-            throw new RuntimeException("An error occurred while removing this computed property of a component.", ex);
+        /* if algo not present, throw error */
+        if (!comp.has(algo)) {
+            log.error("Provided algorithm (" + algo + ") is not present");
+            return false;
         }
+        if (!((JSONObject) comp.get(algo)).has(prop)) {
+            log.error("Provided algorithm property (" + prop + ") is not present");
+            return false;
+        }
+
+        ((JSONObject) comp.get(algo)).remove(prop);
+
+        return true;
     }
 
     /**
@@ -409,27 +292,17 @@ public class Component extends JSONObject {
      *         the algorithm which will have its property changed.
      * @param prop
      *         the property that will be changed.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
-    public boolean setComputed(String algo, String prop, Object value) {
+    public void setComputed(String algo, String prop, Object value) {
+        JSONObject comp = (JSONObject) this.get("comp");
 
-        try {
-            JSONObject comp = (JSONObject) this.get("comp");
-
-             /* if algo property does not exist, create it */
-            if (!comp.has(algo)) {
-                comp.put(algo, new JSONObject());
-            }
-
-            /* Adding computed property */
-            ((JSONObject) comp.get(algo)).put(prop, value);
-
-            return true;
-
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting this computed property of a component.", ex);
+        /* if algo property does not exist, create it */
+        if (!comp.has(algo)) {
+            comp.put(algo, new JSONObject());
         }
+
+        /* Adding computed property */
+        ((JSONObject) comp.get(algo)).put(prop, value);
     }
 
 
@@ -437,63 +310,39 @@ public class Component extends JSONObject {
      * Returns the value of the meta property of this Component as a HashMap.
      *
      * @return a HashMap of the meta property of this component.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public HashMap meta() {
-        try {
-            return (HashMap) this.get("meta");
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while retrieving the meta attributes of a component.", ex);
-        }
+        return (HashMap) this.get("meta");
     }
 
     /**
      * Returns the meta property of this component.
      *
      * @return the value of the meta property.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
     public Object getMeta(String prop) {
-        try {
-            return ((JSONObject) this.get("meta")).get(prop);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the meta attribute of a component.", ex);
-        }
+        return ((JSONObject) this.get("meta")).get(prop);
     }
 
     /**
      * Sets the meta property of this Component
      *
      * @return true if the operation was successful.
-     * @throws RuntimeException
-     *         if an error occurs while retrieving or updating the value of a key.
      */
-    public boolean setMeta(JSONObject json) {
-        try {
-            this.put("meta", json);
-            return true;
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the meta property of a component.", ex);
-        }
+    public void setMeta(JSONObject meta) {
+        this.put("meta", meta);
     }
 
     /**
      * Verifies that the label for this Component is present.
-     *
-     * @throws Error
-     *         if no label is set.
      */
-    void validateGraphLabel() {
+    boolean validateGraphLabel() {
         /* If label is not present throw error */
         if (this.parentGraph.getLabel().isEmpty()) {
-            throw new Error("Graph label is required");
+            log.error("Graph label is required");
+            return false;
         }
-        /* If label is not present throw error */
-        if (this.type.equals("g")) {
-            this.setId(this.getLabel());
-        }
+        return true;
     }
 
     /**
@@ -509,39 +358,34 @@ public class Component extends JSONObject {
         /* validate edge source and target */
         if (this.type.equals("e")) {
             if ((!((Edge) this).hasSource()) || (!((Edge) this).hasTarget())) {
-                throw new Error("Edge source and target are required");
+                log.error("Edge source and target are required");
+                return null;
             }
         }
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-        try {
-            payload.put("graph", this.parentGraph.getLabel());
-            payload.put("type", this.type);
-            payload.put("obj", this);
+        payload.put("graph", this.parentGraph.getLabel());
+        payload.put("type", this.type);
+        payload.put("obj", this);
 
-            msg.setPayload(payload);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while constructing JSON Object - destroy.", ex);
-        }
+        msg.setPayload(payload);
 
-        if (this.debug) {
-            printDebug("persist", apiFun, msg.toString());
-        }
+        log.debug("{} – {}", apiFun, msg.toString());
 
         if (this.parentGraph.isBulkOpen()) {
+            log.debug("Persisting using bulk operation");
             this.parentGraph.pushOperation(apiFun, msg.getPayload());
+            return null;
 
-        }
-
-        return this.parentGraph.getConn().call(apiFun, msg).then(message -> {
-            try {
+        } else {
+            log.debug("Persisting using Promise");
+            return this.parentGraph.getConn().call(apiFun, msg).then(message -> {
                 this.setId(((JSONObject) message.getJSONArray("result").get(1)).get("_id"));
-            } catch (JSONException ex) {
-                throw new RuntimeException("Error while manipulating JSON object - persist", ex);
-            }
-        });
+
+            });
+        }
     }
 
     /**
@@ -560,33 +404,29 @@ public class Component extends JSONObject {
         this.validateGraphLabel();
 
         if (this.type.equals("g") && cmp != null) {
-            this.validateCmp(cmp);
+            if (!this.validateCmp(cmp))
+                return null;
         } else if (this.getId() == null) {
-            throw new Error("Component ID is required");
+            log.error("Component ID is required");
+            return null;
         }
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-        try {
-            payload.put("graph", this.getLabel());
+        payload.put("graph", this.getLabel());
 
-            if (this.type.equals("g")) {
-                payload.put("type", cmp);
-                payload.put("ftr", ftr != null ? ftr : new Filter().getFilters());
-            } else {
-                payload.put("type", this.type);
-                payload.put("obj", new JSONObject().put("id", this.getId()));
-            }
-
-            msg.setPayload(payload);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while constructing JSON Object - destroy.", ex);
+        if (this.type.equals("g")) {
+            payload.put("type", cmp);
+            payload.put("ftr", ftr != null ? ftr : new Filter().getFilters());
+        } else {
+            payload.put("type", this.type);
+            payload.put("obj", new JSONObject().put("id", this.getId()));
         }
 
-        if (this.debug) {
-            printDebug("destroy", apiFun, payload.toString());
-        }
+        msg.setPayload(payload);
+
+        log.debug("{} – {}", apiFun, payload.toString());
 
         return this.parentGraph.getConn().call(apiFun, msg);
     }
@@ -617,10 +457,12 @@ public class Component extends JSONObject {
      * @param cmp
      *         this component type ('v','V', 'e','E', 'g', or 'G').
      */
-    void validateCmp(String cmp) {
+    boolean validateCmp(String cmp) {
         if (!Pattern.compile("v|V|e|E|g|G").matcher(cmp).find()) {
-            throw new Error("Component must be one of the following: 'g', 'G', v','V', 'e','E', provided value: " + cmp);
+            log.error("Component must be one of the following: 'g', 'G', v','V', 'e','E', provided value: " + cmp);
+            return false;
         }
+        return true;
     }
 
     /**
@@ -633,7 +475,7 @@ public class Component extends JSONObject {
      * @param payload
      *         payload sent to DB
      */
-    void printDebug(String msg, String function, String payload) {
+    void logDebug(String msg, String function, String payload) {
         System.out.println("DEBUG[" + msg + "]: " + function + " " + payload);
     }
 }

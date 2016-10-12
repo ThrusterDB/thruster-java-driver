@@ -8,6 +8,8 @@ import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -28,6 +30,8 @@ public class RPC {
     private HashMap<String, Method> procedures;
     private Socket socket;
 
+    private final Logger log = LoggerFactory.getLogger(RPC.class.getSimpleName());
+    
     /**
      * Default Constructor
      */

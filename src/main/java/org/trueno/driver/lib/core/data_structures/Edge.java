@@ -1,8 +1,9 @@
 package org.trueno.driver.lib.core.data_structures;
 
 import org.jdeferred.Promise;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 
 /**
@@ -15,20 +16,19 @@ import org.trueno.driver.lib.core.communication.Message;
  */
 public class Edge extends Component {
 
+    private final Logger log = LoggerFactory.getLogger(Edge.class.getSimpleName());
+
     /**
      * Initializes a new Edge
      */
     public Edge() {
-        try {
-            this.put("source", "");
-            this.put("target", "");
-            this.put("partition", "");
+        this.put("source", "");
+        this.put("target", "");
+        this.put("partition", "");
 
-            this.setType("e");
+        this.setType("e");
 
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while instantiating a new Edge.", ex);
-        }
+        log.trace("Edge object created");
     }
 
     /**
@@ -37,11 +37,7 @@ public class Edge extends Component {
      * @return Edge source
      */
     public String getSource() {
-        try {
-            return this.get("source").toString();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the source of an edge.", ex);
-        }
+        return this.get("source").toString();
     }
 
     /**
@@ -51,11 +47,7 @@ public class Edge extends Component {
      *         new Edge source
      */
     public void setSource(String source) {
-        try {
-            this.put("source", source);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the source of an edge.", ex);
-        }
+        this.put("source", source);
     }
 
     /**
@@ -64,11 +56,7 @@ public class Edge extends Component {
      * @return true if source is set, false otherwise.
      */
     boolean hasSource() {
-        try {
-            return this.has("source") && !this.get("source").toString().isEmpty();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while checking the source of an edge.", ex);
-        }
+        return this.has("source") && !this.get("source").toString().isEmpty();
     }
 
     /**
@@ -77,11 +65,7 @@ public class Edge extends Component {
      * @return Edge target
      */
     public String getTarget() {
-        try {
-            return this.get("target").toString();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the target of an edge.", ex);
-        }
+        return this.get("target").toString();
     }
 
     /**
@@ -91,11 +75,7 @@ public class Edge extends Component {
      *         new Edge target
      */
     public void setTarget(String target) {
-        try {
-            this.put("source", target);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the target of an edge.", ex);
-        }
+        this.put("source", target);
     }
 
     /**
@@ -104,11 +84,7 @@ public class Edge extends Component {
      * @return true if targe is set, false otherwise.
      */
     boolean hasTarget() {
-        try {
-            return this.has("target") && !this.get("target").toString().isEmpty();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while checking the target of an edge.", ex);
-        }
+        return this.has("target") && !this.get("target").toString().isEmpty();
     }
 
     /**
@@ -117,11 +93,7 @@ public class Edge extends Component {
      * @return Edge partition
      */
     public String getPartition() {
-        try {
-            return this.get("partition").toString();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the partition of an edge.", ex);
-        }
+        return this.get("partition").toString();
     }
 
     /**
@@ -131,11 +103,7 @@ public class Edge extends Component {
      *         new Edge partition
      */
     public void setPartition(String partition) {
-        try {
-            this.put("partition", partition);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the partition of an edge.", ex);
-        }
+        this.put("partition", partition);
     }
 
     /**
@@ -155,27 +123,23 @@ public class Edge extends Component {
     public Promise<JSONObject, JSONObject, Integer> vertices() {
         final String apiFun = "ex_vertices";
 
-        if (!this.hasId()) {
-            throw new Error("Edge id is required, set this edge instance id or load edge.");
-        }
+        if (!this.validateGraphLabel())
+            return null;
 
-        this.validateGraphLabel();
+        if (!this.hasId()) {
+            log.error("Edge id is required, set this edge instance id or load edge.");
+            return null;
+        }
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-        try {
-            payload.put("graph", this.getParentGraph().getLabel());
-            payload.put("id", this.getId());
+        payload.put("graph", this.getParentGraph().getLabel());
+        payload.put("id", this.getId());
 
-            msg.setPayload(payload);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while constructing JSON Object - vertices.", ex);
-        }
+        msg.setPayload(payload);
 
-        if (this.getDebug()) {
-            printDebug("vertices", apiFun, payload.toString());
-        }
+        log.debug("{} – {}", apiFung, msg.toString());
 
         return this.getParentGraph().getConn().call(apiFun, msg);
     }

@@ -1,6 +1,8 @@
 package org.trueno.driver.lib.core.data_structures;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -17,6 +19,8 @@ public class Filter {
     private ArrayList<JSONObject> filters;
     private String ftr;
 
+    private final Logger log = LoggerFactory.getLogger(Filter.class.getSimpleName());
+
     /**
      * Create a Filter object instance.
      */
@@ -24,6 +28,8 @@ public class Filter {
 
         this.filters = new ArrayList<>();
         this.ftr = "";
+
+        log.trace("Filter Object created");
     }
 
     /**
@@ -49,19 +55,13 @@ public class Filter {
      *         The filter value.
      */
     public Filter term(String prop, Object val) {
-
         JSONObject json = new JSONObject();
 
-        try {
-
-            json.put("type", "term");
-            json.put("prop", prop);
-            json.put("val", val);
-            json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-            filters.add(json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+        json.put("type", "term");
+        json.put("prop", prop);
+        json.put("val", val);
+        json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
+        filters.add(json);
 
         /* reset filter */
         this.ftr = "";
@@ -83,17 +83,12 @@ public class Filter {
 
         JSONObject json = new JSONObject();
 
-        try {
-
-            json.put("type", "range");
-            json.put("prop", prop);
-            json.put("op", op);
-            json.put("val", val);
-            json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-            filters.add(json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+        json.put("type", "range");
+        json.put("prop", prop);
+        json.put("op", op);
+        json.put("val", val);
+        json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
+        filters.add(json);
 
         /* reset filter */
         this.ftr = "";
@@ -111,14 +106,11 @@ public class Filter {
 
         JSONObject json = new JSONObject();
 
-        try {
-            json.put("type", "exist");
-            json.put("prop", prop);
-            json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-            filters.add(json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+        json.put("type", "exist");
+        json.put("prop", prop);
+        json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
+        filters.add(json);
+
         /* reset filter */
         this.ftr = "";
 
@@ -137,15 +129,11 @@ public class Filter {
 
         JSONObject json = new JSONObject();
 
-        try {
-            json.put("type", "wildcard");
-            json.put("val", val);
-            json.put("prop", prop);
-            json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-            filters.add(json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+        json.put("type", "wildcard");
+        json.put("val", val);
+        json.put("prop", prop);
+        json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
+        filters.add(json);
 
         /* reset filter */
         this.ftr = "";
@@ -165,15 +153,11 @@ public class Filter {
 
         JSONObject json = new JSONObject();
 
-        try {
-            json.put("type", "regexp");
-            json.put("prop", prop);
-            json.put("val", val);
-            json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-            filters.add(json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+        json.put("type", "regexp");
+        json.put("prop", prop);
+        json.put("val", val);
+        json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
+        filters.add(json);
 
         /* reset filter */
         this.ftr = "";
@@ -193,15 +177,11 @@ public class Filter {
 
         JSONObject json = new JSONObject();
 
-        try {
-            json.put("type", "prefix");
-            json.put("prop", prop);
-            json.put("val", val);
-            json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-            filters.add(json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+        json.put("type", "prefix");
+        json.put("prop", prop);
+        json.put("val", val);
+        json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
+        filters.add(json);
 
         /* reset filter */
         this.ftr = "";
@@ -218,13 +198,10 @@ public class Filter {
     public Filter limit(int val) {
 
         JSONObject json = new JSONObject();
-        /* Trying to put json values */
-        try {
-            json.put("type", "size");
-            json.put("val", val);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while manipulating JSON Object", e);
-        }
+
+        json.put("type", "size");
+        json.put("val", val);
+
         /* set object */
         filters.add(json);
 

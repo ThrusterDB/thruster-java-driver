@@ -3,8 +3,9 @@ package org.trueno.driver.lib.core.data_structures;
 import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
 
@@ -27,6 +28,8 @@ public class Graph extends Component {
     private HashMap<String, Edge> edges;
     private HashMap<String, Vertex> vertices;
 
+    private final Logger log = LoggerFactory.getLogger(Graph.class.getSimpleName());
+
     /**
      * Default constructor. Initializes a Graph structure.
      */
@@ -37,11 +40,12 @@ public class Graph extends Component {
         /* setting supper properties */
         this.setType("g");
         this.setParentGraph(this);
-        this.setDebug(false);
 
         /* initializing edges and vertices maps */
         this.edges = new HashMap<>();
         this.vertices = new HashMap<>();
+
+        log.trace("Graph Object created");
     }
 
 
@@ -118,7 +122,6 @@ public class Graph extends Component {
     public Vertex addVertex() {
 
         Vertex v = new Vertex();
-        v.setDebug(this.getDebug());
         v.setParentGraph(this);
         /* adding vertex to the collection */
         this.vertices.put(v.getRef(), v);
@@ -134,7 +137,6 @@ public class Graph extends Component {
     public Edge addEdge() {
 
         Edge e = new Edge();
-        e.setDebug(this.getDebug());
         e.setParentGraph(this);
         /* adding edge to the collection */
         this.edges.put(e.getRef(), e);
@@ -170,12 +172,8 @@ public class Graph extends Component {
 
         JSONObject json = new JSONObject();
 
-        try {
-            json.put("op", op);
-            json.put("content", obj);
-        } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object", e);
-        }
+        json.put("op", op);
+        json.put("content", obj);
 
         this.bulkOperations.add(json);
     }
@@ -212,28 +210,21 @@ public class Graph extends Component {
         /* building the message */
         Message msg = new Message();
 
-        try {
             /* building payload */
-            JSONObject payload = new JSONObject();
+        JSONObject payload = new JSONObject();
 
-            payload.put("graph", this.getLabel());
-            payload.put("type", cmp.toLowerCase());
+        payload.put("graph", this.getLabel());
+        payload.put("type", cmp.toLowerCase());
 
             /* if parameter is not null */
-            if (ftr != null) {
-                payload.put("ftr", ftr.getFilters());
-            }
-            /* set the payload */
-            msg.setPayload(payload);
-
-        } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object", e);
+        if (ftr != null) {
+            payload.put("ftr", ftr.getFilters());
         }
+            /* set the payload */
+        msg.setPayload(payload);
 
         /* if debug display operation params */
-        if (this.getDebug()) {
-            printDebug("fetch", apiFunc, msg.toString());
-        }
+        log.debug("{} – {}", apiFunc, msg.toString());
 
         return this.conn.call(apiFunc, msg);
     }
@@ -253,26 +244,20 @@ public class Graph extends Component {
         /* building the message */
         Message msg = new Message();
 
-        try {
-            /* building payload */
-            JSONObject payload = new JSONObject();
+        /* building payload */
+        JSONObject payload = new JSONObject();
 
-            payload.put("graph", this.getLabel());
-            payload.put("type", "g");
-            payload.put("mask", true);
-            payload.put("obj", this);
+        payload.put("graph", this.getLabel());
+        payload.put("type", "g");
+        payload.put("mask", true);
+        payload.put("obj", this);
 
-            /* set the payload */
-            msg.setPayload(payload);
+        /* set the payload */
+        msg.setPayload(payload);
 
-        } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object - open", e);
-        }
 
         /* if debug display operation params */
-        if (this.getDebug()) {
-            printDebug("open", apiFunc, msg.toString());
-        }
+        log.debug("{} – {}", apiFunc, msg.toString());
 
         return this.conn.call(apiFunc, msg);
     }
@@ -311,27 +296,20 @@ public class Graph extends Component {
         /* building the message */
         Message msg = new Message();
 
-        try {
-            /* building payload */
-            JSONObject payload = new JSONObject();
-            payload.put("graph", this.getLabel());
-            payload.put("type", cmp.toLowerCase());
+        /* building payload */
+        JSONObject payload = new JSONObject();
+        payload.put("graph", this.getLabel());
+        payload.put("type", cmp.toLowerCase());
 
-            /* if parameter is not null */
-            if (ftr != null) {
-                payload.put("ftr", ftr.getFilters());
-            }
-            /* set the payload */
-            msg.setPayload(payload);
-
-        } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object - count", e);
+        /* if parameter is not null */
+        if (ftr != null) {
+            payload.put("ftr", ftr.getFilters());
         }
+        /* set the payload */
+        msg.setPayload(payload);
 
         /* if debug display operation params */
-        if (this.getDebug()) {
-            printDebug("count", apiFun, msg.toString());
-        }
+        log.debug("{} – {}", apiFun, msg.toString());
 
         return this.conn.call(apiFun, msg);
     }
@@ -353,24 +331,17 @@ public class Graph extends Component {
         /* building the message */
         Message msg = new Message();
 
-        try {
-            /* building payload */
-            JSONObject payload = new JSONObject();
-            payload.put("graph", this.getLabel());
-            payload.put("type", this.getType());
-            payload.put("obj", this);
+        /* building payload */
+        JSONObject payload = new JSONObject();
+        payload.put("graph", this.getLabel());
+        payload.put("type", this.getType());
+        payload.put("obj", this);
 
-            /* set the payload */
-            msg.setPayload(payload);
-
-        } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object - create", e);
-        }
+        /* set the payload */
+        msg.setPayload(payload);
 
         /* if debug display operation params */
-        if (this.getDebug()) {
-            printDebug("create", apiFunc, msg.toString());
-        }
+        log.debug("{} – {}", apiFunc, msg.toString());
 
         return this.conn.call(apiFunc, msg);
     }
@@ -389,22 +360,15 @@ public class Graph extends Component {
         /* building the message */
         Message msg = new Message();
 
-        try {
-            /* building payload */
-            JSONObject payload = new JSONObject();
-            payload.put("graph", this.getLabel());
-            payload.put("operations", this.bulkOperations);
-            /* set the payload */
-            msg.setPayload(payload);
-
-        } catch (JSONException e) {
-            throw new RuntimeException("Error while constructing JSON Object - bulk", e);
-        }
+        /* building payload */
+        JSONObject payload = new JSONObject();
+        payload.put("graph", this.getLabel());
+        payload.put("operations", this.bulkOperations);
+        /* set the payload */
+        msg.setPayload(payload);
 
         /* if debug display operation params */
-        if (this.getDebug()) {
-            printDebug("bulk", apiFunc, msg.toString());
-        }
+        log.debug("{} – {}", apiFunc, msg.toString());
 
         /* Instantiating deferred object */
         final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
@@ -414,28 +378,25 @@ public class Graph extends Component {
         /* if no bulk operations return deferred now */
         if (this.bulkOperations.size() == 0) {
             JSONObject json = new JSONObject();
-            try {
-                json.put("took", 0);
-                json.put("errors", false);
-                json.put("items", new ArrayList<JSONObject>());
 
-                deferred.resolve(json);
+            json.put("took", 0);
+            json.put("errors", false);
+            json.put("items", new ArrayList<JSONObject>());
 
-                return promise;
-            } catch (JSONException e) {
-                throw new RuntimeException("Error while constructing JSON Object - bulk", e);
-            }
+            deferred.resolve(json);
+
+            return promise;
         }
-
-        this.conn.call(apiFunc, msg).then((message) -> {
+        else {
+            this.conn.call(apiFunc, msg).then((message) -> {
             /* Clear structures */
-            this.isBulkOpen = false;
-            this.bulkOperations.clear();
+                this.isBulkOpen = false;
+                this.bulkOperations.clear();
 
-            deferred.resolve(message);
+                deferred.resolve(message);
 
-        }, deferred::reject);
-
+            }, deferred::reject);
+        }
         return promise;
     }
 }

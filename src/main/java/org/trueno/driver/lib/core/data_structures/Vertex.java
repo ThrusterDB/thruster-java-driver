@@ -4,8 +4,9 @@ import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 
 import java.util.Iterator;
@@ -21,18 +22,16 @@ import java.util.Iterator;
 
 public class Vertex extends Component {
 
+    private final Logger log = LoggerFactory.getLogger(Vertex.class.getSimpleName());
+
     /**
      * Create a Vertex instance
      */
     public Vertex() {
+        this.put("partition", 0);
+        this.setType("v");
 
-        try {
-            this.put("partition", 0);
-            this.setType("v");
-
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while instantiating a new Vertex.", ex);
-        }
+        log.trace("Vertex Object created");
     }
 
     /**
@@ -41,11 +40,7 @@ public class Vertex extends Component {
      * @return the partition(s).
      */
     public String getPartition() {
-        try {
-            return this.get("partition").toString();
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while getting the partition of an edge.", ex);
-        }
+        return this.get("partition").toString();
     }
 
     /**
@@ -55,11 +50,7 @@ public class Vertex extends Component {
      *         Partition to be set on this Vertex.
      */
     public void setPartition(String partition) {
-        try {
-            this.put("partition", partition);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while setting the partition of an edge.", ex);
-        }
+        this.put("partition", partition);
     }
 
     /**
@@ -111,34 +102,27 @@ public class Vertex extends Component {
     public Promise<JSONObject, JSONObject, Integer> neighbors(String cmpType, Filter filter, String direction) {
         final String apiFun = "ex_neighbors";
 
-        this.validateCmp(cmpType);
+        if (!this.validateCmp(cmpType) || !this.validateGraphLabel())
+            return null;
 
         if (!this.hasId()) {
-            throw new Error("Vertex ID is required.");
+            log.error("Vertex ID is required.");
         }
-
-        this.validateGraphLabel();
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-        try {
-            payload.put("graph", this.getParentGraph().getLabel());
-            payload.put("id", this.getId());
-            payload.put("dir", direction);
-            payload.put("cmp", cmpType.toLowerCase());
+        payload.put("graph", this.getParentGraph().getLabel());
+        payload.put("id", this.getId());
+        payload.put("dir", direction);
+        payload.put("cmp", cmpType.toLowerCase());
 
-            if (filter != null)
-                payload.put("ftr", filter.getFilters());
+        if (filter != null)
+            payload.put("ftr", filter.getFilters());
 
-            msg.setPayload(payload);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while constructing JSON Object - vertices.", ex);
-        }
+        msg.setPayload(payload);
 
-        if (this.getDebug()) {
-            printDebug(direction, apiFun, payload.toString());
-        }
+        log.debug("{} {} – {}", apiFun, direction, msg.toString());
 
         /* Instantiating deferred object */
         final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
@@ -214,18 +198,16 @@ public class Vertex extends Component {
     Promise<JSONObject, JSONObject, Integer> degree(String cmpType, Filter filter, String direction) {
         final String apiFun = "ex_degree";
 
-        this.validateCmp(cmpType);
+        if (!this.validateCmp(cmpType) || !this.validateGraphLabel())
+            return null;
 
         if (!this.hasId()) {
             throw new Error("Vertex ID is required.");
         }
 
-        this.validateGraphLabel();
-
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-        try {
             payload.put("graph", this.getParentGraph().getLabel());
             payload.put("id", this.getId());
             payload.put("dir", direction);
@@ -235,13 +217,8 @@ public class Vertex extends Component {
                 payload.put("ftr", filter.getFilters());
 
             msg.setPayload(payload);
-        } catch (JSONException ex) {
-            throw new RuntimeException("An error occurred while constructing JSON Object - vertices.", ex);
-        }
 
-        if (this.getDebug()) {
-            printDebug(direction + " Degree", apiFun, payload.toString());
-        }
+        log.debug("{} {} – {}", apiFun, direction, msg.toString());
 
         return this.getParentGraph().getConn().call(apiFun, msg);
     }
