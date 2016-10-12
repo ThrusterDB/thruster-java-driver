@@ -139,7 +139,7 @@ public class Edge extends Component {
 
         msg.setPayload(payload);
 
-        log.debug("{} – {}", apiFung, msg.toString());
+        log.debug("{} – {}", apiFun, msg.toString());
 
         return this.getParentGraph().getConn().call(apiFun, msg);
     }
