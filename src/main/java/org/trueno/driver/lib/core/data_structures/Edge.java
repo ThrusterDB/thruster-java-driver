@@ -4,6 +4,7 @@ import org.jdeferred.Promise;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
+import org.trueno.driver.lib.core.utils.Pair;
 
 import java.util.IntSummaryStatistics;
 import java.util.concurrent.CompletableFuture;
@@ -14,9 +15,9 @@ import java.util.concurrent.CompletableFuture;
  * Purpose:
  */
 
-class Edge extends Component {
+public class Edge extends Component {
 
-    Edge() {
+    public Edge() {
         try {
             this.put("source", "");
             this.put("target", "");
@@ -27,6 +28,11 @@ class Edge extends Component {
         } catch (JSONException ex) {
             throw new RuntimeException("An error occurred while instantiating a new Edge.", ex);
         }
+    }
+
+    public Object getId() {
+
+        return new Pair<>(this.getSource(), this.getTarget());
     }
 
     public String getSource() {
