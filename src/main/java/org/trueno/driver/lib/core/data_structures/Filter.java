@@ -1,10 +1,9 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
 
 /**
  * <b>Filter Class</b>
@@ -16,7 +15,7 @@ import java.util.ArrayList;
  */
 public class Filter {
 
-    private ArrayList<JSONObject> filters;
+    private JSONArray filters;
     private String ftr;
 
     private final Logger log = LoggerFactory.getLogger(Filter.class.getName());
@@ -26,7 +25,7 @@ public class Filter {
      */
     public Filter() {
 
-        this.filters = new ArrayList<>();
+        this.filters = new JSONArray();
         this.ftr = "";
 
         log.trace("Filter Object created");
@@ -35,7 +34,7 @@ public class Filter {
     /**
      * Returns an array of all filters.
      */
-    public ArrayList<JSONObject> getFilters() {
+    public JSONArray getFilters() {
         return this.filters;
     }
 
@@ -43,7 +42,7 @@ public class Filter {
      * Clear stored filters.
      */
     public void clearFilters() {
-        this.filters.clear();
+        this.filters = new JSONArray();
     }
 
     /**
@@ -61,7 +60,7 @@ public class Filter {
         json.put("prop", prop);
         json.put("val", val);
         json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-        filters.add(json);
+        filters.put(json);
 
         /* reset filter */
         this.ftr = "";
@@ -88,7 +87,7 @@ public class Filter {
         json.put("op", op);
         json.put("val", val);
         json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-        filters.add(json);
+        filters.put(json);
 
         /* reset filter */
         this.ftr = "";
@@ -109,7 +108,7 @@ public class Filter {
         json.put("type", "exist");
         json.put("prop", prop);
         json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-        filters.add(json);
+        filters.put(json);
 
         /* reset filter */
         this.ftr = "";
@@ -133,7 +132,7 @@ public class Filter {
         json.put("val", val);
         json.put("prop", prop);
         json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-        filters.add(json);
+        filters.put(json);
 
         /* reset filter */
         this.ftr = "";
@@ -157,7 +156,7 @@ public class Filter {
         json.put("prop", prop);
         json.put("val", val);
         json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-        filters.add(json);
+        filters.put(json);
 
         /* reset filter */
         this.ftr = "";
@@ -181,7 +180,7 @@ public class Filter {
         json.put("prop", prop);
         json.put("val", val);
         json.put("ftr", this.ftr.isEmpty() ? "AND" : this.ftr);
-        filters.add(json);
+        filters.put(json);
 
         /* reset filter */
         this.ftr = "";
@@ -203,7 +202,7 @@ public class Filter {
         json.put("val", val);
 
         /* set object */
-        filters.add(json);
+        filters.put(json);
 
         return this;
     }

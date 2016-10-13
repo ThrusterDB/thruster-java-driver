@@ -87,19 +87,20 @@ public class TruenoTest {
     public void DeleteGraph() {
         /* instantiate graph */
         Graph g = trueno.Graph("graphi");
+        g.setId("graphi");
 
-        doPromise(g.destroy("v", new Filter()), "");
+        doPromise(g.destroy("g", new Filter()), "");
     }
 
     private void doPromise(Promise<JSONObject, JSONObject, Integer> p, String assertion) {
         final String[] retMsg = new String[1];
 
         p.then(message -> {
-            retMsg[0] = message.toString();
-        }, error -> fail(error.toString()));
+            retMsg[0] = message.toString(4);
+        }, error -> fail(error.get("result").toString()));
 
         try {
-            Thread.sleep(250);
+            Thread.sleep(350);
 
             assertTrue(p.isResolved());
 
