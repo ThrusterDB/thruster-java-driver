@@ -8,28 +8,35 @@ import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.lang.reflect.Method;
+import java.util.logging.LogManager;
 
 /**
+ * <b>RPC Class</b>
+ * <p>Provides the communication facilities to interact with the Trueno Remote Database</p>
+ *
  * @author Victor Santos
  * @author Miguel Rivera
- *
- * Date: 7/19/16
- * Purpose:
+ * @version 0.1.0
  */
-
 public class RPC {
 
-    /* Private properties */
     private String host;
     private int port;
     private HashMap<String, Method> procedures;
     private Socket socket;
 
-    /* Default Constructor */
+    private final Logger log = LoggerFactory.getLogger(RPC.class.getName());
+    
+    /**
+     * Default Constructor
+     */
     public RPC() {
 
         /* Set default properties */
@@ -37,9 +44,18 @@ public class RPC {
         this.port = 8000;
         this.procedures = new HashMap<>();
         this.socket = null;
+
+        log.trace("RPC Object created");
     }
 
-    /* Constructor with Parameters */
+    /**
+     * Overloaded Constructor
+     *
+     * @param host
+     *         Hostname for database connection
+     * @param port
+     *         Port number for database connection
+     */
     public RPC(String host, Integer port) {
 
         /* calling default constructor */
@@ -49,12 +65,15 @@ public class RPC {
         this.port = port != null ? port : this.port;
     }
 
-    /* Public methods */
-    public void expose(String procedureName, Method procedureFunction) {
-        /* Insert the procedure in the collection */
-        this.procedures.put(procedureName, procedureFunction);
-    }
-
+    /**
+     * Invokes a function in the Remote Database specified by the supplied method name and arguments.
+     *
+     * @param method
+     *         Method in the Trueno Remote Database to execute.
+     * @param arg
+     *         Arguments for the invoked function.
+     * @return Promise with async result.
+     */
     public Promise<JSONObject, JSONObject, Integer> call(final String method, final JSONObject arg) {
 
         /* Instantiating deferred object */
@@ -88,7 +107,14 @@ public class RPC {
         return promise;
     }
 
-
+    /**
+     * Connects to the Trueno Database
+     *
+     * @param connCallback
+     *         Callback function to be executed if connection is successful.
+     * @param discCallback
+     *         Callback function to be executed if connection is unsuccessful.
+     */
     public void connect(final Callback connCallback, final Callback discCallback) {
         /* instantiating the socket */
         try {
@@ -98,7 +124,7 @@ public class RPC {
         }
 
         this.socket
-                .on(Socket.EVENT_CONNECT,    args -> connCallback.method(this.socket))
+                .on(Socket.EVENT_CONNECT, args -> connCallback.method(this.socket))
                 .on(Socket.EVENT_DISCONNECT, args -> discCallback.method(this.socket));
 
         /* Connecting Socket */

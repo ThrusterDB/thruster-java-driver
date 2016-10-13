@@ -1,12 +1,14 @@
 package org.trueno.driver.lib.core.communication;
+
 import com.github.nkzawa.socketio.client.Socket;
 
 /**
- * Created by: victor
- * Date: 7/20/16
- * Purpose:
+ * <b>Callback Interface</b>
+ * <p>Interface of Object received by remote operations in the RPC class.</p>
+ *
+ * @author Victor Santos
+ * @version 0.1.0
  */
-
 public interface Callback {
 
     void method(Socket socket);

@@ -1,5 +1,12 @@
 package org.trueno.driver.lib.core.communication;
 
+/**
+ * Enumerator for Socket-IO Emitter return codes.
+ *
+ * @author Victor Santos
+ * @author Miguel Rivera
+ * @version 0.1.0
+ */
 enum Status {
     SUCCESS("success"),
     ERROR("error");
@@ -7,7 +14,10 @@ enum Status {
     private final String text;
 
     /**
-     * @param text Status string representation
+     * Sets the status of the operation.
+     *
+     * @param text
+     *         Status string representation.
      */
     Status(final String text) {
         this.text = text;

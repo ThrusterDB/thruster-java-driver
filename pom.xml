@@ -6,7 +6,7 @@
 
     <groupId>org.trueno.driver</groupId>
     <artifactId>trueno-java-driver</artifactId>
-    <version>1.0</version>
+    <version>0.1.0</version>
     <name>TruenoDB Java Driver</name>
 
     <dependencies>
@@ -37,8 +37,8 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.7</version>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>1.7.21</version>
         </dependency>
     </dependencies>
     <properties>
