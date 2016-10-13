@@ -53,7 +53,7 @@ public class TruenoTest {
         g.setComputed("pagerank", "average", 2.55);
         g.setComputed("pagerank", "low", 1);
 
-        doPromise(g.create(), "");
+        doPromise(g.create());
     }
 
     @Test
@@ -63,9 +63,9 @@ public class TruenoTest {
 
         Filter filter = g.filter().term("prop.name", "aura");
 
-        doPromise(g.count("v", filter), "");
+        doPromise(g.count("v", filter));
 
-        doPromise(g.count("v"), "");
+        doPromise(g.count("v"));
     }
 
     @Test
@@ -76,11 +76,11 @@ public class TruenoTest {
         Filter filter = g.filter().term("prop.version", 1);
         Filter filter2 = g.filter().term("prop.name", "aura");
 
-        doPromise(g.fetch("g", filter), "");
+        doPromise(g.fetch("g", filter));
 
-        doPromise(g.fetch("v", filter2), "");
+        doPromise(g.fetch("v", filter2));
 
-        doPromise(g.fetch("e"), "");
+        doPromise(g.fetch("e"));
     }
 
     @Test
@@ -89,22 +89,17 @@ public class TruenoTest {
         Graph g = trueno.Graph("graphi");
         g.setId("graphi");
 
-        doPromise(g.destroy("g", new Filter()), "");
+        doPromise(g.destroy("g", new Filter()));
     }
 
-    private void doPromise(Promise<JSONObject, JSONObject, Integer> p, String assertion) {
-        final String[] retMsg = new String[1];
-
+    private void doPromise(Promise<JSONObject, JSONObject, Integer> p) {
         p.then(message -> {
-            retMsg[0] = message.toString(4);
         }, error -> fail(error.get("result").toString()));
 
         try {
-            Thread.sleep(350);
+            Thread.sleep(750);
 
             assertTrue(p.isResolved());
-
-            assertEquals(assertion, retMsg[0]);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

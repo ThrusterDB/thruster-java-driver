@@ -49,14 +49,6 @@ public class Trueno {
         this.isConnected = false;
         this.rpc = new RPC(this.host, this.port);
 
-        try {
-            System.setProperty("java.util.logging.config.file", this.getClass().getClassLoader().getResource("logging.properties").getPath());
-            LogManager.getLogManager().readConfiguration();
-        }
-        catch (IOException | NullPointerException ex) {
-            log.info("Logging – Could not find TruenoDB Driver logging configuration file – Using JRE default configuration", ex);
-        }
-
         log.trace("Trueno Object created");
     }
 
