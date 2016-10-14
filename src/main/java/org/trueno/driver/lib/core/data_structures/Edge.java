@@ -86,7 +86,7 @@ public class Edge extends Component {
      *         new Edge target
      */
     public void setTarget(String target) {
-        this.put("source", target);
+        this.put("target", target);
     }
 
     /**
