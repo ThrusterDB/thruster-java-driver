@@ -29,7 +29,7 @@ public class Component extends JSONObject {
     /**
      * Default constructor.
      */
-    Component() {
+    public Component() {
         /* set UUID */
         this.ref = UUID.randomUUID().toString();
 
@@ -56,7 +56,7 @@ public class Component extends JSONObject {
      * @param obj
      *         JSONObject with preset keys id, prop (properties), meta and comp (computed).
      */
-    Component(JSONObject obj) {
+    public Component(JSONObject obj) {
         super();
 
         this.setId(obj.get("id"));
@@ -375,12 +375,12 @@ public class Component extends JSONObject {
         log.debug("{} – {}", apiFun, msg.toString());
 
         if (this.parentGraph.isBulkOpen()) {
-            log.debug("Persisting using bulk operation");
+            log.trace("Persisting using bulk operation");
             this.parentGraph.pushOperation(apiFun, msg.getPayload());
             return null;
 
         } else {
-            log.debug("Persisting using Promise");
+            log.trace("Persisting using Promise");
             return this.parentGraph.getConn().call(apiFun, msg).then(message -> {
                 this.setId(((JSONObject) message.getJSONArray("result").get(1)).get("_id"));
 

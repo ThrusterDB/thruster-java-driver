@@ -3,10 +3,10 @@ package org.trueno.driver.lib.core;
 import org.jdeferred.Promise;
 import org.json.JSONObject;
 import org.junit.*;
+import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.data_structures.Edge;
 import org.trueno.driver.lib.core.data_structures.Filter;
 import org.trueno.driver.lib.core.data_structures.Graph;
@@ -20,14 +20,15 @@ import static org.junit.Assert.*;
  * @author Miguel Rivera
  * @version 0.1.0
  */
-
 @FixMethodOrder(MethodSorters.JVM)
 public class TruenoTest {
-    private final static Trueno trueno = new Trueno("http://localhost", 8000);
+    private final static Trueno trueno = new Trueno();
     private final Logger log = LoggerFactory.getLogger(TruenoTest.class.getName());
+    private static Graph g1;
+    private static Graph g2;
 
     @BeforeClass
-    public static void Connect() {
+    public static void ConnectAndCreateGraphs() {
         trueno.connect(s -> LoggerFactory.getLogger(TruenoTest.class.getName()).debug("Connected: " + s.id()), s -> LoggerFactory.getLogger(TruenoTest.class.getName()).debug("Disconnected"));
 
         try {
@@ -37,41 +38,40 @@ public class TruenoTest {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        //Create Graphs
+        g1 = trueno.Graph("graphi");
+        g2 = trueno.Graph("citations");
+
+        g1.setProperty("version", 1);
+
+        g1.setComputed("pagerank", "average", 2.55);
+        g1.setComputed("pagerank", "low", 1);
+
+        LoggerFactory.getLogger(TruenoTest.class.getName()).debug(doPromise(g1.create()));
     }
 
     @AfterClass
-    public static void Disconnect() {
+    public static void DisconnectAndDestroyGraphs() {
         if (!trueno.isConnected()) {
             fail("Trueno Database could not connect");
         }
+
+        //Destroy Graphs
+        LoggerFactory.getLogger(TruenoTest.class.getName()).debug(doPromise(g1.destroy("g", new Filter())));
 
         trueno.disconnect();
     }
 
     @Test
-    public void CreateGraph() {
-        /* instantiate graph */
-        Graph g = trueno.Graph("graphi");
-
-        /* Adding properties and computed fields */
-        g.setProperty("version", 1);
-
-        g.setComputed("pagerank", "average", 2.55);
-        g.setComputed("pagerank", "low", 1);
-
-        doPromise(g.create());
-    }
-
-    @Test
+    @Category(FastTests.class)
     public void CreateVertices() {
-        Graph g = trueno.Graph("graphi");
-
-        Vertex v1 = g.addVertex();
-        Vertex v2 = g.addVertex();
-        Vertex v3 = g.addVertex();
-        Vertex v4 = g.addVertex();
-        Vertex v5 = g.addVertex();
-        Vertex v6 = g.addVertex();
+        Vertex v1 = g1.addVertex();
+        Vertex v2 = g1.addVertex();
+        Vertex v3 = g1.addVertex();
+        Vertex v4 = g1.addVertex();
+        Vertex v5 = g1.addVertex();
+        Vertex v6 = g1.addVertex();
 
         v1.setId(1);
         v2.setId(2);
@@ -108,12 +108,11 @@ public class TruenoTest {
     }
 
     @Test
+    @Category(FastTests.class)
     public void CreateEdges() {
-        Graph g = trueno.Graph("graphi");
-
-        Edge e1 = g.addEdge();
-        Edge e2 = g.addEdge();
-        Edge e3 = g.addEdge();
+        Edge e1 = g1.addEdge();
+        Edge e2 = g1.addEdge();
+        Edge e3 = g1.addEdge();
 
         e1.setSource("1");
         e1.setTarget("2");
@@ -142,52 +141,53 @@ public class TruenoTest {
     }
 
     @Test
+    @Category(FastTests.class)
     public void CountVerticesInGraph() {
-        /* instantiate graph */
-        Graph g = trueno.Graph("graphi");
+        Filter filter = g1.filter().term("prop.name", "aura");
 
-        Filter filter = g.filter().term("prop.name", "aura");
+        log.debug(doPromise(g1.count("v", filter)));
 
-        doPromise(g.count("v", filter));
-
-        doPromise(g.count("v"));
+        log.debug(doPromise(g1.count("v")));
     }
 
     @Test
+    @Category(FastTests.class)
     public void FetchGraphFromDB() {
-        /* instantiate graph */
-        Graph g = trueno.Graph("graphi");
+        Filter filter = g1.filter().term("prop.version", 1);
+        Filter filter2 = g1.filter().term("prop.name", "aura");
 
-        Filter filter = g.filter().term("prop.version", 1);
-        Filter filter2 = g.filter().term("prop.name", "aura");
+        log.debug(doPromise(g1.fetch("g", filter)));
 
-        doPromise(g.fetch("g", filter));
+        log.debug(doPromise(g1.fetch("v", filter2)));
 
-        doPromise(g.fetch("v", filter2));
-
-        doPromise(g.fetch("e"));
+        log.debug(doPromise(g1.fetch("e")));
     }
 
     @Test
-    public void DeleteGraph() {
-        /* instantiate graph */
-        Graph g = trueno.Graph("graphi");
-        g.setId("graphi");
+    @Category(FastTests.class)
+    public void DeleteVertices() {
 
-        doPromise(g.destroy("g", new Filter()));
     }
 
-    private void doPromise(Promise<JSONObject, JSONObject, Integer> p) {
-        p.then(message -> {
-            log.debug(message.get("result").toString());
-        }, error -> {
-            fail(error.get("result").toString());
-            log.debug(error.get("result").toString());
+    @Test
+    @Category(FastTests.class)
+    public void DeleteEdges() {
+
+    }
+
+    private static String doPromise(Promise<JSONObject, JSONObject, Integer> p) {
+        final String[] res = new String[1];
+
+        p.then(success -> res[0] = "Promise Result:" + success.get("result").toString(), error -> {
+            if (error.keySet().size() > 1)
+                fail(res[0] = ("Promise Error:" + (((JSONObject) error.get("result")).toString(4))));
+            else
+                fail(res[0] = "Promise Error:" + error.get("result").toString());
         });
 
         try {
             while (true) {
-                if(!p.isPending()) {
+                if (!p.isPending()) {
                     assertTrue(p.isResolved());
                     break;
                 }
@@ -195,5 +195,7 @@ public class TruenoTest {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        return res[0];
     }
 }
