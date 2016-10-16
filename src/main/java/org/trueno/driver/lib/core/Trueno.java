@@ -48,17 +48,13 @@ public class Trueno {
         this.port = 8000;
         this.isConnected = false;
         this.rpc = new RPC(this.host, this.port);
-
-        log.trace("Trueno Object created");
     }
 
     /**
      * Default Constructor. Initializes TruenoDB connection parameters to the specified host and port.
      *
-     * @param host
-     *         Hostname to initialize the TruenoDB connection.
-     * @param port
-     *         Port number to intialize the TruenoDB connection.
+     * @param host Hostname to initialize the TruenoDB connection.
+     * @param port Port number to intialize the TruenoDB connection.
      */
     public Trueno(String host, Integer port) {
 
@@ -68,17 +64,13 @@ public class Trueno {
         this.host = host != null ? host : this.host;
         this.port = port != null ? port : this.port;
         this.rpc = new RPC(this.host, this.port);
-
-        log.trace("Overloaded Trueno Object created – Host: {} Port: {}", host, port);
     }
 
     /**
      * Establish the connection with the Trueno Database Server.
      *
-     * @param connCallback
-     *         callback function to be executed if connection is successful.
-     * @param discCallback
-     *         callback function to be executed if connection is unsuccessful.
+     * @param connCallback callback function to be executed if connection is successful.
+     * @param discCallback callback function to be executed if connection is unsuccessful.
      */
     public void connect(final Callback connCallback, final Callback discCallback) {
         /* Connect the rpc object */
@@ -113,8 +105,7 @@ public class Trueno {
     /**
      * Sets the hostname the driver will use for connections.
      *
-     * @param host
-     *         hostname to be used.
+     * @param host hostname to be used.
      */
     public void setHost(String host) {
         this.host = host;
@@ -150,8 +141,7 @@ public class Trueno {
     /**
      * Sets the RPC object to be used for TruenoDB communications.
      *
-     * @param rpc
-     *         new RPC object to communicate.
+     * @param rpc new RPC object to communicate.
      */
     public void setRpc(RPC rpc) {
         this.rpc = rpc;
@@ -169,8 +159,7 @@ public class Trueno {
     /**
      * Creates a new graph instance related with this connection.
      *
-     * @param label
-     *         The graph label.
+     * @param label The graph label.
      * @return A new Graph.
      */
     public Graph Graph(String label) {
@@ -185,8 +174,7 @@ public class Trueno {
     /**
      * Execute SQL query in the database.
      *
-     * @param query
-     *         The sql query to be executed.
+     * @param query The sql query to be executed.
      * @return Promise with the SQL operations results.
      */
     public Promise<JSONObject, JSONObject, Integer> sql(String query) {
@@ -208,16 +196,17 @@ public class Trueno {
             JSONArray vertices = new JSONArray();
             JSONArray edges = new JSONArray();
 
-            for (Iterator it = message.keys(); it.hasNext(); ) {
-                switch (((Component) it).getType()) {
+            for (Object o : message.getJSONArray("result")) {
+                JSONObject current = (JSONObject) o;
+                switch (current.get("_type").toString()) {
                     case "v":
                         Vertex v = new Vertex();
-                        v.setId(((Component) it).getId());
+                        v.setId(current.get("_id"));
                         vertices.put(v);
                         break;
                     case "e":
                         Edge e = new Edge();
-                        e.setId(((Component) it).getId());
+                        e.setId(current);
                         edges.put(e);
                         break;
                 }

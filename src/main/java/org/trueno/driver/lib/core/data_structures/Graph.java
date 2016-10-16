@@ -3,6 +3,7 @@ package org.trueno.driver.lib.core.data_structures;
 import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,10 +24,11 @@ import java.util.HashMap;
 public class Graph extends Component {
 
     private RPC conn;
-    private ArrayList<JSONObject> bulkOperations;
+    private JSONArray bulkOperations;
     private boolean isBulkOpen = false;
     private HashMap<String, Edge> edges;
     private HashMap<String, Vertex> vertices;
+    private Compute compute;
 
     private final Logger log = LoggerFactory.getLogger(Graph.class.getName());
 
@@ -35,7 +37,7 @@ public class Graph extends Component {
      */
     public Graph() {
         /* init bulk operations */
-        this.bulkOperations = new ArrayList<>();
+        this.bulkOperations = new JSONArray();
 
         /* setting supper properties */
         this.setType("g");
@@ -45,9 +47,9 @@ public class Graph extends Component {
         this.edges = new HashMap<>();
         this.vertices = new HashMap<>();
 
-        log.trace("Graph Object created");
+        this.compute = new Compute();
+        compute.setParentGraph(this);
     }
-
 
     /**
      * Returns whether the driver is sending bulk transactions to the remote Trueno DB.
@@ -73,7 +75,9 @@ public class Graph extends Component {
      * @return array of Edges
      */
     public Edge[] edges() {
-        return (Edge[]) edges.values().toArray();
+        ArrayList<Edge> edgeList = new ArrayList<>();
+        edgeList.addAll(edges.values());
+        return edgeList.toArray(new Edge[edgeList.size()]);
     }
 
     /**
@@ -82,27 +86,18 @@ public class Graph extends Component {
      * @return array of Vertices
      */
     public Vertex[] vertices() {
-        return (Vertex[]) vertices.values().toArray();
+        ArrayList<Vertex> vertexList = new ArrayList<>();
+        vertexList.addAll(vertices.values());
+        return vertexList.toArray(new Vertex[vertexList.size()]);
     }
 
     /**
      * Sets the RPC connection object to be used by this Graph
      *
-     * @param conn
-     *         RPC connection object
+     * @param conn RPC connection object
      */
     public void setConn(RPC conn) {
         this.conn = conn;
-    }
-
-    /**
-     * Sets this Graph to do send any updates to the remote DB in bulk.
-     *
-     * @param bulkOpen
-     *         true if bulk operations will be enabled, false if they will be disabled
-     */
-    public void setBulkOpen(boolean bulkOpen) {
-        isBulkOpen = bulkOpen;
     }
 
     /**
@@ -120,7 +115,6 @@ public class Graph extends Component {
      * @return The new vertex.
      */
     public Vertex addVertex() {
-
         Vertex v = new Vertex();
         v.setParentGraph(this);
         /* adding vertex to the collection */
@@ -135,7 +129,6 @@ public class Graph extends Component {
      * @return The new edge.
      */
     public Edge addEdge() {
-
         Edge e = new Edge();
         e.setParentGraph(this);
         /* adding edge to the collection */
@@ -145,13 +138,31 @@ public class Graph extends Component {
     }
 
     /**
+     * Creates a new edge associated with this graph using specified source and target
+     *
+     * @return The new edge.
+     */
+    public Edge addEdge(Object source, Object target) {
+        Edge e = new Edge(source.toString(), target.toString());
+        e.setParentGraph(this);
+        /* adding edge to the collection */
+        this.edges.put(e.getRef(), e);
+
+        return e;
+    }
+
+    public Compute getCompute() {
+        return this.compute;
+    }
+
+    /**
      * Open batch operation zone.
      */
     public void openBatch() {
         this.isBulkOpen = true;
     }
 
-    /**
+    /*
      * Submit the batch operation in bulk into the database.
      *
      * @return Promise with the bulk operations results.
@@ -163,26 +174,22 @@ public class Graph extends Component {
     /**
      * Pushes the operation string and parameter into the bulk list.
      *
-     * @param op
-     *         The operation to be inserted into the bulk list.
-     * @param obj
-     *         The operation object.
+     * @param op  The operation to be inserted into the bulk list.
+     * @param obj The operation object.
      */
     public void pushOperation(String op, JSONObject obj) {
-
         JSONObject json = new JSONObject();
 
         json.put("op", op);
         json.put("content", obj);
 
-        this.bulkOperations.add(json);
+        this.bulkOperations.put(json);
     }
 
     /**
      * Fetch components from Elastic Search.
      *
-     * @param cmp
-     *         the component string for the search
+     * @param cmp the component string for the search
      * @return The requested instantiated set of components.
      */
     public Promise<JSONObject, JSONObject, Integer> fetch(String cmp) {
@@ -192,25 +199,37 @@ public class Graph extends Component {
     /**
      * Fetch components from Elastic Search.
      *
-     * @param cmp
-     *         the component string for the search
-     * @param ftr
-     *         Filter for the results of the search
+     * @param cmp the component string for the search
+     * @param ftr Filter for the results of the search
      * @return The requested instantiated set of components.
      */
     public Promise<JSONObject, JSONObject, Integer> fetch(String cmp, Filter ftr) {
         final String apiFunc = "ex_fetch";
 
         /* Validate the component */
-        this.validateCmp(cmp);
+        if (!this.validateCmp(cmp)) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Invalid Component", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
+            return promise;
+        }
 
         /* If label is not present throw error */
-        this.validateGraphLabel();
+        if (!this.validateGraphLabel()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+            return promise;
+        }
 
         /* building the message */
         Message msg = new Message();
 
-            /* building payload */
+        /* building payload */
         JSONObject payload = new JSONObject();
 
         payload.put("graph", this.getLabel());
@@ -224,7 +243,7 @@ public class Graph extends Component {
         msg.setPayload(payload);
 
         /* if debug display operation params */
-        log.debug("{} – {}", apiFunc, msg.toString());
+        log.trace("{} – {}", apiFunc, msg.toString());
 
         return this.conn.call(apiFunc, msg);
     }
@@ -239,7 +258,14 @@ public class Graph extends Component {
         final String apiFunc = "ex_open";
 
         /* If label is not present throw error */
-        this.validateGraphLabel();
+        if (!this.validateGraphLabel()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+            return promise;
+        }
 
         /* building the message */
         Message msg = new Message();
@@ -257,7 +283,7 @@ public class Graph extends Component {
 
 
         /* if debug display operation params */
-        log.debug("{} – {}", apiFunc, msg.toString());
+        log.trace("{} – {}", apiFunc, msg.toString());
 
         return this.conn.call(apiFunc, msg);
     }
@@ -265,8 +291,7 @@ public class Graph extends Component {
     /**
      * Count components at the remote database.
      *
-     * @param cmp
-     *         The component type, can be 'v','V', 'e','E', 'g', or 'G'
+     * @param cmp The component type, can be 'v','V', 'e','E', 'g', or 'G'
      * @return Promise with the count result.
      */
     public Promise<JSONObject, JSONObject, Integer> count(String cmp) {
@@ -276,22 +301,33 @@ public class Graph extends Component {
     /**
      * Count components at the remote database.
      *
-     * @param cmp
-     *         The component type, can be 'v','V', 'e','E', 'g', or 'G'
-     * @param ftr
-     *         The filter to be applied
+     * @param cmp The component type, can be 'v','V', 'e','E', 'g', or 'G'
+     * @param ftr The filter to be applied
      * @return Promise with the count result.
      */
     public Promise<JSONObject, JSONObject, Integer> count(String cmp, Filter ftr) {
-
-        /* Validate the component */
-        this.validateCmp(cmp);
-
         /* This object reference */
         final String apiFun = "ex_count";
 
+        /* Validate the component */
+        if (!this.validateCmp(cmp)) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Invalid Component", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
+            return promise;
+        }
+
         /* If label is not present throw error */
-        this.validateGraphLabel();
+        if (!this.validateGraphLabel()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+            return promise;
+        }
 
         /* building the message */
         Message msg = new Message();
@@ -309,7 +345,7 @@ public class Graph extends Component {
         msg.setPayload(payload);
 
         /* if debug display operation params */
-        log.debug("{} – {}", apiFun, msg.toString());
+        log.trace("{} – {}", apiFun, msg.toString());
 
         return this.conn.call(apiFun, msg);
     }
@@ -320,10 +356,17 @@ public class Graph extends Component {
      * @return Promise with the creation result.
      */
     public Promise<JSONObject, JSONObject, Integer> create() {
-        final String apiFunc = "ex_create";
+        final String apiFun = "ex_create";
 
         /* If label is not present throw error */
-        this.validateGraphLabel();
+        if (!this.validateGraphLabel()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+            return promise;
+        }
 
         /* Set the id */
         this.setId(this.getLabel());
@@ -341,9 +384,9 @@ public class Graph extends Component {
         msg.setPayload(payload);
 
         /* if debug display operation params */
-        log.debug("{} – {}", apiFunc, msg.toString());
+        log.trace("{} – {}", apiFun, msg.toString());
 
-        return this.conn.call(apiFunc, msg);
+        return this.conn.call(apiFun, msg);
     }
 
     /**
@@ -352,10 +395,18 @@ public class Graph extends Component {
      * @return Promise with the bulk operation result
      */
     public Promise<JSONObject, JSONObject, Integer> bulk() {
-        final String apiFunc = "ex_bulk";
+        final String apiFun = "ex_bulk";
+
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         /* If label is not present throw error */
-        this.validateGraphLabel();
+        if (!this.validateGraphLabel()) {
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+
+            return promise;
+        }
 
         /* building the message */
         Message msg = new Message();
@@ -368,30 +419,24 @@ public class Graph extends Component {
         msg.setPayload(payload);
 
         /* if debug display operation params */
-        log.debug("{} – {}", apiFunc, msg.toString());
-
-        /* Instantiating deferred object */
-        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-        /* Extracting promise */
-        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+        log.trace("{} – {}", apiFun, msg.toString());
 
         /* if no bulk operations return deferred now */
-        if (this.bulkOperations.size() == 0) {
+        if (this.bulkOperations.length() == 0) {
             JSONObject json = new JSONObject();
 
             json.put("took", 0);
             json.put("errors", false);
-            json.put("items", new ArrayList<JSONObject>());
+            json.put("items", new JSONArray());
 
             deferred.resolve(json);
 
             return promise;
-        }
-        else {
-            this.conn.call(apiFunc, msg).then((message) -> {
+        } else {
+            this.conn.call(apiFun, msg).then((message) -> {
             /* Clear structures */
                 this.isBulkOpen = false;
-                this.bulkOperations.clear();
+                this.bulkOperations = new JSONArray();
 
                 deferred.resolve(message);
 

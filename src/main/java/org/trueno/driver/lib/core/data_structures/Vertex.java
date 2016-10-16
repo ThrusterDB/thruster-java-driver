@@ -30,8 +30,6 @@ public class Vertex extends Component {
     public Vertex() {
         this.put("partition", 0);
         this.setType("v");
-
-        log.trace("Vertex Object created");
     }
 
     /**
@@ -46,8 +44,7 @@ public class Vertex extends Component {
     /**
      * Sets a partition on this Vertex.
      *
-     * @param partition
-     *         Partition to be set on this Vertex.
+     * @param partition Partition to be set on this Vertex.
      */
     public void setPartition(String partition) {
         this.put("partition", partition);
@@ -65,10 +62,8 @@ public class Vertex extends Component {
     /**
      * Returns the in neighbors of this Vertex based on the supplied component type and Filter.
      *
-     * @param cmp
-     *         component type for the neighbor search
-     * @param filter
-     *         filter for the neighbor search
+     * @param cmp    component type for the neighbor search
+     * @param filter filter for the neighbor search
      * @return Promise with the neighbors result
      */
     public Promise<JSONObject, JSONObject, Integer> in(String cmp, Filter filter) {
@@ -78,10 +73,8 @@ public class Vertex extends Component {
     /**
      * Returns the out neighbors of this Vertex based on the supplied component type and Filter.
      *
-     * @param cmp
-     *         component type for the neighbor search
-     * @param filter
-     *         filter for the neighbor search
+     * @param cmp    component type for the neighbor search
+     * @param filter filter for the neighbor search
      * @return Promise with the neighbors result
      */
     public Promise<JSONObject, JSONObject, Integer> out(String cmp, Filter filter) {
@@ -91,19 +84,32 @@ public class Vertex extends Component {
     /**
      * Returns the neighbors of this Vertex based on the specified component type, filter and search direction
      *
-     * @param cmpType
-     *         Component type for the neighbor search
-     * @param filter
-     *         Filter to be applied to the neighbor search
-     * @param direction
-     *         neighbors search direction (in, out).
+     * @param cmp       Component type for the neighbor search
+     * @param filter    Filter to be applied to the neighbor search
+     * @param direction neighbors search direction (in, out).
      * @return Promise with the neighbors search result
      */
-    public Promise<JSONObject, JSONObject, Integer> neighbors(String cmpType, Filter filter, String direction) {
+    public Promise<JSONObject, JSONObject, Integer> neighbors(String cmp, Filter filter, String direction) {
         final String apiFun = "ex_neighbors";
 
-        if (!this.validateCmp(cmpType) || !this.validateGraphLabel())
-            return null;
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+        /* Validate the component */
+        if (!this.validateCmp(cmp)) {
+            log.error("{} – Invalid Component", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
+
+            return promise;
+        }
+
+        /* If label is not present throw error */
+        if (!this.validateGraphLabel()) {
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+
+            return promise;
+        }
 
         if (!this.hasId()) {
             log.error("Vertex ID is required.");
@@ -115,22 +121,17 @@ public class Vertex extends Component {
         payload.put("graph", this.getParentGraph().getLabel());
         payload.put("id", this.getId());
         payload.put("dir", direction);
-        payload.put("cmp", cmpType.toLowerCase());
+        payload.put("cmp", cmp.toLowerCase());
 
         if (filter != null)
             payload.put("ftr", filter.getFilters());
 
         msg.setPayload(payload);
 
-        log.debug("{} {} – {}", apiFun, direction, msg.toString());
-
-        /* Instantiating deferred object */
-        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-        /* Extracting promise */
-        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+        log.trace("{} {} – {}", apiFun, direction, msg.toString());
 
         this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
-            if (cmpType.equals("v")) {
+            if (cmp.equals("v")) {
                 JSONArray vertices = new JSONArray();
                 Vertex v;
 
@@ -161,10 +162,8 @@ public class Vertex extends Component {
     /**
      * Returns the neighbors of this Vertex based on the specified component type, filter and (in) search direction
      *
-     * @param cmp
-     *         Component type for the neighbor search
-     * @param filter
-     *         Filter to be applied to the neighbor search
+     * @param cmp    Component type for the neighbor search
+     * @param filter Filter to be applied to the neighbor search
      * @return Promise with the neighbors search result
      */
     Promise<JSONObject, JSONObject, Integer> inDegree(String cmp, Filter filter) {
@@ -174,10 +173,8 @@ public class Vertex extends Component {
     /**
      * Returns the neighbors of this Vertex based on the specified component type, filter and (out) search direction
      *
-     * @param cmp
-     *         Component type for the neighbor search
-     * @param filter
-     *         Filter to be applied to the neighbor search
+     * @param cmp    Component type for the neighbor search
+     * @param filter Filter to be applied to the neighbor search
      * @return Promise with the neighbors search result
      */
     Promise<JSONObject, JSONObject, Integer> outDegree(String cmp, Filter filter) {
@@ -187,38 +184,59 @@ public class Vertex extends Component {
     /**
      * Returns the neighbors of this Vertex based on the specified component type, filter and search direction
      *
-     * @param cmpType
-     *         Component type for the neighbor search
-     * @param filter
-     *         Filter to be applied to the neighbor search
-     * @param direction
-     *         neighbors search direction (in, out).
+     * @param cmp       Component type for the neighbor search
+     * @param filter    Filter to be applied to the neighbor search
+     * @param direction neighbors search direction (in, out).
      * @return Promise with the neighbors search result
      */
-    Promise<JSONObject, JSONObject, Integer> degree(String cmpType, Filter filter, String direction) {
+    Promise<JSONObject, JSONObject, Integer> degree(String cmp, Filter filter, String direction) {
         final String apiFun = "ex_degree";
 
-        if (!this.validateCmp(cmpType) || !this.validateGraphLabel())
-            return null;
+        /* Validate the component */
+        if (!this.validateCmp(cmp)) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Invalid Component", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
+
+            return promise;
+        }
+
+        /* If label is not present throw error */
+        if (!this.validateGraphLabel()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+
+            return promise;
+        }
 
         if (!this.hasId()) {
-            throw new Error("Vertex ID is required.");
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("Vertex ID is required.");
+            deferred.reject(new JSONObject().put("error", "Vertex ID is required."));
+            return promise;
         }
 
         Message msg = new Message();
         JSONObject payload = new JSONObject();
 
-            payload.put("graph", this.getParentGraph().getLabel());
-            payload.put("id", this.getId());
-            payload.put("dir", direction);
-            payload.put("cmp", cmpType.toLowerCase());
+        payload.put("graph", this.getParentGraph().getLabel());
+        payload.put("id", this.getId());
+        payload.put("dir", direction);
+        payload.put("cmp", cmp.toLowerCase());
 
-            if (filter != null)
-                payload.put("ftr", filter.getFilters());
+        if (filter != null)
+            payload.put("ftr", filter.getFilters());
 
-            msg.setPayload(payload);
+        msg.setPayload(payload);
 
-        log.debug("{} {} – {}", apiFun, direction, msg.toString());
+        log.trace("{} {} – {}", apiFun, direction, msg.toString());
 
         return this.getParentGraph().getConn().call(apiFun, msg);
     }

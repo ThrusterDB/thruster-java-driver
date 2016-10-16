@@ -1,6 +1,8 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
+import org.jdeferred.impl.DeferredObject;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +30,17 @@ public class Edge extends Component {
         this.put("partition", "");
 
         this.setType("e");
+    }
 
-        log.trace("Edge object created");
+    /**
+     * Initializes a new Edge with source and target
+     */
+    public Edge(String source, String target) {
+        this.put("source", source);
+        this.put("target", target);
+        this.put("partition", "");
+
+        this.setType("e");
     }
 
     /**
@@ -54,8 +65,7 @@ public class Edge extends Component {
     /**
      * Sets the source of this Edge
      *
-     * @param source
-     *         new Edge source
+     * @param source new Edge source
      */
     public void setSource(String source) {
         this.put("source", source);
@@ -82,8 +92,7 @@ public class Edge extends Component {
     /**
      * Sets the target of this Edge
      *
-     * @param target
-     *         new Edge target
+     * @param target new Edge target
      */
     public void setTarget(String target) {
         this.put("target", target);
@@ -110,8 +119,7 @@ public class Edge extends Component {
     /**
      * Sets the partition of this Edge
      *
-     * @param partition
-     *         new Edge partition
+     * @param partition new Edge partition
      */
     public void setPartition(String partition) {
         this.put("partition", partition);
@@ -134,12 +142,22 @@ public class Edge extends Component {
     public Promise<JSONObject, JSONObject, Integer> vertices() {
         final String apiFun = "ex_vertices";
 
-        if (!this.validateGraphLabel())
-            return null;
+        if (!this.validateGraphLabel()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
+            log.error("{} – Graph label not set", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
+            return promise;
+        }
 
         if (!this.hasId()) {
+            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
             log.error("Edge id is required, set this edge instance id or load edge.");
-            return null;
+            deferred.reject(new JSONObject().put("error", "Edge id is required, set this edge instance id or load edge."));
+            return promise;
         }
 
         Message msg = new Message();
@@ -150,7 +168,7 @@ public class Edge extends Component {
 
         msg.setPayload(payload);
 
-        log.debug("{} – {}", apiFun, msg.toString());
+        log.trace("{} – {}", apiFun, msg.toString());
 
         return this.getParentGraph().getConn().call(apiFun, msg);
     }

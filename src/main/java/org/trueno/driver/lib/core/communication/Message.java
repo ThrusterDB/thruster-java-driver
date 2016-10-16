@@ -13,9 +13,6 @@ import org.slf4j.LoggerFactory;
  * @version 0.1.0
  */
 public class Message extends JSONObject {
-
-    private final Logger log = LoggerFactory.getLogger(Message.class.getName());
-
     /**
      * Initializes a Message with empty fields
      */
@@ -28,8 +25,6 @@ public class Message extends JSONObject {
         this.put("_type", "");
         /* Setting property fields */
         this.put("_status", "");
-
-        log.trace("Message Object created");
     }
 
     /**
@@ -56,7 +51,7 @@ public class Message extends JSONObject {
      * @return the message type value
      */
     public String getType() {
-        return (String) this.get("_type");
+        return this.get("_type").toString();
     }
 
     /**
@@ -65,14 +60,13 @@ public class Message extends JSONObject {
      * @return the message status value
      */
     public String getStatus() {
-        return (String) this.get("_status");
+        return this.get("_status").toString();
     }
 
     /**
      * Sets the message metadata
      *
-     * @param meta
-     *         the new value of the Message metadata
+     * @param meta the new value of the Message metadata
      */
     public void setMeta(JSONObject meta) {
         this.put("_meta", meta);
@@ -81,18 +75,16 @@ public class Message extends JSONObject {
     /**
      * Sets the message payload
      *
-     * @param payload
-     *         the new value of the Message payload
+     * @param payload the new value of the Message payload
      */
     public void setPayload(JSONObject payload) {
         this.put("_payload", payload);
     }
 
     /**
-     * Sets the message type
+     * Returns the message type
      *
-     * @param type
-     *         the new value of the Message type
+     * @param type the Message type
      */
     public void getType(String type) {
         this.put("_type", type);
@@ -101,11 +93,9 @@ public class Message extends JSONObject {
     /**
      * Sets the message status
      *
-     * @param status
-     *         the new value of the Message status
+     * @param status the new value of the Message status
      */
     public void setStatus(String status) {
         this.put("_status", status);
     }
-
 }

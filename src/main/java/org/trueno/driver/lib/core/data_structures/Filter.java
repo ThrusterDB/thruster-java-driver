@@ -18,8 +18,6 @@ public class Filter {
     private JSONArray filters;
     private String ftr;
 
-    private final Logger log = LoggerFactory.getLogger(Filter.class.getName());
-
     /**
      * Create a Filter object instance.
      */
@@ -27,8 +25,6 @@ public class Filter {
 
         this.filters = new JSONArray();
         this.ftr = "";
-
-        log.trace("Filter Object created");
     }
 
     /**
@@ -48,10 +44,8 @@ public class Filter {
     /**
      * The term matching filter, can be either a exact string or number.
      *
-     * @param prop
-     *         The property/meta/computed to be applied on the operation.
-     * @param val
-     *         The filter value.
+     * @param prop The property/meta/computed to be applied on the operation.
+     * @param val  The filter value.
      */
     public Filter term(String prop, Object val) {
         JSONObject json = new JSONObject();
@@ -71,12 +65,9 @@ public class Filter {
     /**
      * The range filter.
      *
-     * @param prop
-     *         The property/meta/computed to be applied on the operation.
-     * @param op
-     *         The inequality operator(gt,gte,lt,lte).
-     * @param val
-     *         The filter date or number value.
+     * @param prop The property/meta/computed to be applied on the operation.
+     * @param op   The inequality operator(gt,gte,lt,lte).
+     * @param val  The filter date or number value.
      */
     public Filter range(String prop, String op, Object val) {
 
@@ -98,8 +89,7 @@ public class Filter {
     /**
      * The exist check field filter.
      *
-     * @param prop
-     *         The property/meta/computed to be applied on the operation.
+     * @param prop The property/meta/computed to be applied on the operation.
      */
     public Filter exist(String prop) {
 
@@ -119,10 +109,8 @@ public class Filter {
     /**
      * The wildcard string search filter.
      *
-     * @param prop
-     *         The property/meta/computed to be applied on the operation.
-     * @param val
-     *         The wildcard filter value.
+     * @param prop The property/meta/computed to be applied on the operation.
+     * @param val  The wildcard filter value.
      */
     public Filter wildcard(String prop, String val) {
 
@@ -143,10 +131,8 @@ public class Filter {
     /**
      * The regexp string search filter.
      *
-     * @param prop
-     *         The property/meta/computed to be applied on the operation.
-     * @param val
-     *         The filter regular expression value.
+     * @param prop The property/meta/computed to be applied on the operation.
+     * @param val  The filter regular expression value.
      */
     public Filter regexp(String prop, String val) {
 
@@ -167,10 +153,8 @@ public class Filter {
     /**
      * The prefix string search filter.
      *
-     * @param prop
-     *         The property/meta/computed to be applied on the operation.
-     * @param val
-     *         The filter value.
+     * @param prop The property/meta/computed to be applied on the operation.
+     * @param val  The filter value.
      */
     public Filter prefix(String prop, Object val) {
 
@@ -191,8 +175,7 @@ public class Filter {
     /**
      * Limit the results of this search.
      *
-     * @param val
-     *         The integer limit of for the results.
+     * @param val The integer limit of for the results.
      */
     public Filter limit(int val) {
 

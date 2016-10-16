@@ -33,7 +33,7 @@ public class RPC {
     private Socket socket;
 
     private final Logger log = LoggerFactory.getLogger(RPC.class.getName());
-    
+
     /**
      * Default Constructor
      */
@@ -44,17 +44,13 @@ public class RPC {
         this.port = 8000;
         this.procedures = new HashMap<>();
         this.socket = null;
-
-        log.trace("RPC Object created");
     }
 
     /**
      * Overloaded Constructor
      *
-     * @param host
-     *         Hostname for database connection
-     * @param port
-     *         Port number for database connection
+     * @param host Hostname for database connection
+     * @param port Port number for database connection
      */
     public RPC(String host, Integer port) {
 
@@ -68,10 +64,8 @@ public class RPC {
     /**
      * Invokes a function in the Remote Database specified by the supplied method name and arguments.
      *
-     * @param method
-     *         Method in the Trueno Remote Database to execute.
-     * @param arg
-     *         Arguments for the invoked function.
+     * @param method Method in the Trueno Remote Database to execute.
+     * @param arg    Arguments for the invoked function.
      * @return Promise with async result.
      */
     public Promise<JSONObject, JSONObject, Integer> call(final String method, final JSONObject arg) {
@@ -93,6 +87,8 @@ public class RPC {
                 JSONObject value = new JSONObject();
                 value.put("result", args.get("_payload"));
 
+                log.trace("Server response: {}", value.toString(2));
+
                 if (args.get("_status").toString().equals(Status.SUCCESS.toString())) {
                     deferred.resolve(value);
                 } else if (args.get("_status").toString().equals(Status.ERROR.toString())) {
@@ -110,17 +106,15 @@ public class RPC {
     /**
      * Connects to the Trueno Database
      *
-     * @param connCallback
-     *         Callback function to be executed if connection is successful.
-     * @param discCallback
-     *         Callback function to be executed if connection is unsuccessful.
+     * @param connCallback Callback function to be executed if connection is successful.
+     * @param discCallback Callback function to be executed if connection is unsuccessful.
      */
     public void connect(final Callback connCallback, final Callback discCallback) {
         /* instantiating the socket */
         try {
             this.socket = IO.socket(this.host + ":" + this.port);
         } catch (URISyntaxException e) {
-            throw new Error("Could not connect to the database", e);
+            throw new Error("Invalid host and port specified for Trueno connection", e);
         }
 
         this.socket

@@ -16,8 +16,7 @@ enum Status {
     /**
      * Sets the status of the operation.
      *
-     * @param text
-     *         Status string representation.
+     * @param text Status string representation.
      */
     Status(final String text) {
         this.text = text;
