@@ -1,5 +1,6 @@
 package org.trueno.driver.lib.core.data_structures;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
@@ -182,6 +183,10 @@ public class Component extends JSONObject {
      */
     public JSONObject properties() {
         return (JSONObject) this.get("prop");
+    }
+
+    public boolean hasProperty(String prop) {
+        return ((JSONObject) this.get("prop")).has(prop);
     }
 
     /**
