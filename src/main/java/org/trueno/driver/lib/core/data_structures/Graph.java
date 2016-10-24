@@ -26,6 +26,7 @@ public class Graph extends Component {
     private RPC conn;
     private JSONArray bulkOperations;
     private boolean isBulkOpen = false;
+    // FIXME: The benefits of having a copy of the graph structure is not clear, since it's only populated when adding vertex/edges
     private HashMap<String, Edge> edges;
     private HashMap<String, Vertex> vertices;
     private Compute compute;
@@ -137,13 +138,14 @@ public class Graph extends Component {
         return e;
     }
 
+    // FIXME: addEdge should be on Vertex class, since it's more natural that way.
     /**
      * Creates a new edge associated with this graph using specified source and target
      *
      * @return The new edge.
      */
     public Edge addEdge(Object source, Object target) {
-        Edge e = new Edge(source.toString(), target.toString());
+        Edge e = new Edge(source, target);
         e.setParentGraph(this);
         /* adding edge to the collection */
         this.edges.put(e.getRef(), e);
@@ -281,7 +283,8 @@ public class Graph extends Component {
         /* set the payload */
         msg.setPayload(payload);
 
-
+        /* temporal */
+        log.info("{} ---> hello! {}", apiFunc, msg);
         /* if debug display operation params */
         log.trace("{} – {}", apiFunc, msg.toString());
 

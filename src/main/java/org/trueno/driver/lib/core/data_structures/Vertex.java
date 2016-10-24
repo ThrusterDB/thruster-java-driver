@@ -11,15 +11,19 @@ import org.trueno.driver.lib.core.communication.Message;
 
 import java.util.Iterator;
 
+
+// FIXME: Standarize all promise calls; instead of returning a JSONObject should be a JSONArray  (list of Component)
+// FIXME: Return of promise should be iterators and must be support streams
+
 /**
  * <b>Vertex Class</b>
  * <p>TruenoDB Vertex primitive data structure</p>
  *
  * @author Victor Santos
  * @author Miguel Rivera
+ * @author Edgardo Barsallo Yi
  * @version 0.1.0
  */
-
 public class Vertex extends Component {
 
     private final Logger log = LoggerFactory.getLogger(Vertex.class.getName());
@@ -30,6 +34,15 @@ public class Vertex extends Component {
     public Vertex() {
         this.put("partition", 0);
         this.setType("v");
+    }
+
+    /**
+     * Overloaded constructor. Allows to pass by parameter a Graph, Vertex or Edge already instantiated.
+     *
+     * @param obj JSONObject with preset keys id, prop (properties), meta and comp (computed).
+     */
+    public Vertex(JSONObject obj) {
+        super(obj);
     }
 
     /**
@@ -66,7 +79,7 @@ public class Vertex extends Component {
      * @param filter filter for the neighbor search
      * @return Promise with the neighbors result
      */
-    public Promise<JSONObject, JSONObject, Integer> in(String cmp, Filter filter) {
+    public Promise<JSONArray, JSONObject, Integer> in(String cmp, Filter filter) {
         return neighbors(cmp, filter, "in");
     }
 
@@ -77,7 +90,7 @@ public class Vertex extends Component {
      * @param filter filter for the neighbor search
      * @return Promise with the neighbors result
      */
-    public Promise<JSONObject, JSONObject, Integer> out(String cmp, Filter filter) {
+    public Promise<JSONArray, JSONObject, Integer> out(String cmp, Filter filter) {
         return neighbors(cmp, filter, "out");
     }
 
@@ -89,11 +102,11 @@ public class Vertex extends Component {
      * @param direction neighbors search direction (in, out).
      * @return Promise with the neighbors search result
      */
-    public Promise<JSONObject, JSONObject, Integer> neighbors(String cmp, Filter filter, String direction) {
+    public Promise<JSONArray, JSONObject, Integer> neighbors(String cmp, Filter filter, String direction) {
         final String apiFun = "ex_neighbors";
 
-        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+        final Deferred<JSONArray, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONArray, JSONObject, Integer> promise = deferred.promise();
 
         /* Validate the component */
         if (!this.validateCmp(cmp)) {
@@ -131,28 +144,35 @@ public class Vertex extends Component {
         log.trace("{} {} – {}", apiFun, direction, msg.toString());
 
         this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
+//            System.out.println("____neighbors: (" + cmp + ") --> " + message);
             if (cmp.equals("v")) {
                 JSONArray vertices = new JSONArray();
                 Vertex v;
 
-                for (Iterator it = message.keys(); it.hasNext(); ) {
-                    v = new Vertex();
-                    v.setProperty("_source", it.next().toString());
+//                System.out.println("____neighbors: --> " + message.get("result"));
+
+                // FIXME: This should be done by a method
+                for (Iterator it = ((JSONArray)message.get("result")).iterator(); it.hasNext(); ) {
+//                    System.out.println("____neighbors: iter --> " + ((JSONObject)it.next()).get("_source"));
+                    v = new Vertex((JSONObject) ((JSONObject)it.next()).get("_source"));
+//                    System.out.println("____neighbors: v --> " + v);
                     vertices.put(v);
                 }
 
-                deferred.resolve(new JSONObject(vertices));
+
+//                System.out.println("____neighbors: --> " + vertices);
+
+                deferred.resolve(vertices);
             } else {
                 JSONArray edges = new JSONArray();
                 Edge e;
 
-                for (Iterator it = message.keys(); it.hasNext(); ) {
-                    e = new Edge();
-                    e.setSource(it.next().toString());
+                for (Iterator it = ((JSONArray)message.get("result")).iterator(); it.hasNext(); ) {
+                    e = new Edge((JSONObject) ((JSONObject)it.next()).get("_source"));
                     edges.put(e);
                 }
 
-                deferred.resolve(new JSONObject(edges));
+                deferred.resolve(edges);
             }
         }, deferred::reject);
 

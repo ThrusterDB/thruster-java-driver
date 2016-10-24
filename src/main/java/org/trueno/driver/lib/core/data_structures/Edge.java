@@ -33,9 +33,18 @@ public class Edge extends Component {
     }
 
     /**
+     * Overloaded constructor. Allows to pass by parameter a Edge already instantiated.
+     *
+     * @param obj JSONObject with preset keys id, prop (properties), meta and comp (computed).
+     */
+    public Edge(JSONObject obj) {
+        super(obj);
+    }
+
+    /**
      * Initializes a new Edge with source and target
      */
-    public Edge(String source, String target) {
+    public Edge(Object source, Object target) {
         this.put("source", source);
         this.put("target", target);
         this.put("partition", "");
