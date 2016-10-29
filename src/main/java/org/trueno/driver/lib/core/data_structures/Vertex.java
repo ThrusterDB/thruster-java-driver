@@ -8,7 +8,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
+import org.trueno.driver.lib.core.utils.ComponentHelper;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 
@@ -32,6 +36,7 @@ public class Vertex extends Component {
      * Create a Vertex instance
      */
     public Vertex() {
+        // TODO: do something with 'partition' field.
         this.put("partition", 0);
         this.setType("v");
     }
@@ -144,34 +149,14 @@ public class Vertex extends Component {
         log.trace("{} {} – {}", apiFun, direction, msg.toString());
 
         this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
-//            System.out.println("____neighbors: (" + cmp + ") --> " + message);
+
             if (cmp.equals("v")) {
-                JSONArray vertices = new JSONArray();
-                Vertex v;
-
-//                System.out.println("____neighbors: --> " + message.get("result"));
-
-                // FIXME: This should be done by a method
-                for (Iterator it = ((JSONArray)message.get("result")).iterator(); it.hasNext(); ) {
-//                    System.out.println("____neighbors: iter --> " + ((JSONObject)it.next()).get("_source"));
-                    v = new Vertex((JSONObject) ((JSONObject)it.next()).get("_source"));
-//                    System.out.println("____neighbors: v --> " + v);
-                    vertices.put(v);
-                }
-
-
-//                System.out.println("____neighbors: --> " + vertices);
-
+                /* vertex */
+                JSONArray vertices = ComponentHelper.toVertexArray(message);
                 deferred.resolve(vertices);
             } else {
-                JSONArray edges = new JSONArray();
-                Edge e;
-
-                for (Iterator it = ((JSONArray)message.get("result")).iterator(); it.hasNext(); ) {
-                    e = new Edge((JSONObject) ((JSONObject)it.next()).get("_source"));
-                    edges.put(e);
-                }
-
+                /* edge */
+                JSONArray edges = ComponentHelper.toEdgeArray(message);
                 deferred.resolve(edges);
             }
         }, deferred::reject);

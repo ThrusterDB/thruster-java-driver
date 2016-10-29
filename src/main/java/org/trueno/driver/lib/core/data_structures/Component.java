@@ -38,7 +38,7 @@ public class Component extends JSONObject {
         this.ref = UUID.randomUUID().toString();
 
         /* setting id */
-        this.put("id", "");
+        this.put("id", new Object());
 
         /* setting Job ID */
         this.put("jobId", "");
@@ -382,6 +382,9 @@ public class Component extends JSONObject {
         payload.put("obj", this);
 
         msg.setPayload(payload);
+
+        /* temporal */
+        log.info("{} – {}", apiFun, msg.toString(2));
 
         log.trace("{} – {}", apiFun, msg.toString(2));
 

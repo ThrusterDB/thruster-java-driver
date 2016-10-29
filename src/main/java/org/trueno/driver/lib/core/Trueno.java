@@ -38,14 +38,17 @@ public class Trueno {
 
     private final Logger log = LoggerFactory.getLogger(Trueno.class.getName());
 
+    public static final String DEFAULT_HOST = "http://localhost";
+    public static final int    DEFAULT_PORT = 8000;
+
     /**
      * Default Constructor. Initializes TruenoDB connection parameters to localhost:8000
      */
     public Trueno() {
 
         /* Set default properties */
-        this.host = "http://localhost";
-        this.port = 8000;
+        this.host = DEFAULT_HOST;
+        this.port = DEFAULT_PORT;
         this.isConnected = false;
         this.rpc = new RPC(this.host, this.port);
     }
@@ -72,17 +75,24 @@ public class Trueno {
      * @param connCallback callback function to be executed if connection is successful.
      * @param discCallback callback function to be executed if connection is unsuccessful.
      */
-    public void connect(final Callback connCallback, final Callback discCallback) {
+    public Trueno connect(final Callback connCallback, final Callback discCallback) {
         /* Connect the rpc object */
-        this.rpc.connect(socket -> {
-            this.isConnected = true;
-            log.trace("Trueno connected");
-            connCallback.method(socket);
-        }, socket -> {
-            this.isConnected = false;
-            log.trace("Trueno disconnected");
-            discCallback.method(socket);
-        });
+        this.rpc.connect(
+                /* on connect callback */
+                socket -> {
+                    this.isConnected = true;
+                    log.info("[{}] Trueno connected", socket.id());
+                    connCallback.method(socket);
+                },
+                /* on disconnect callback */
+                socket -> {
+                    this.isConnected = false;
+                    log.info("[{}] Trueno disconnected", socket.id());
+                    discCallback.method(socket);
+                }
+        );
+
+        return this;
     }
 
     /**
@@ -167,6 +177,7 @@ public class Trueno {
         Graph g = new Graph();
         g.setConn(this.rpc);
         g.setLabel(label);
+        g.setId(label);
 
         return g;
     }

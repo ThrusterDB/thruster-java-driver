@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
+import org.trueno.driver.lib.core.utils.ComponentHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -194,7 +195,7 @@ public class Graph extends Component {
      * @param cmp the component string for the search
      * @return The requested instantiated set of components.
      */
-    public Promise<JSONObject, JSONObject, Integer> fetch(String cmp) {
+    public Promise<JSONArray, JSONObject, Integer> fetch(String cmp) {
         return this.fetch(cmp, null);
     }
 
@@ -205,14 +206,14 @@ public class Graph extends Component {
      * @param ftr Filter for the results of the search
      * @return The requested instantiated set of components.
      */
-    public Promise<JSONObject, JSONObject, Integer> fetch(String cmp, Filter ftr) {
+    public Promise<JSONArray, JSONObject, Integer> fetch(String cmp, Filter ftr) {
         final String apiFunc = "ex_fetch";
+
+        final Deferred<JSONArray, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONArray, JSONObject, Integer> promise = deferred.promise();
 
         /* Validate the component */
         if (!this.validateCmp(cmp)) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
             log.error("{} – Invalid Component", this.getId());
             deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
             return promise;
@@ -220,9 +221,6 @@ public class Graph extends Component {
 
         /* If label is not present throw error */
         if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
             log.error("{} – Graph label not set", this.getId());
             deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
             return promise;
@@ -247,7 +245,18 @@ public class Graph extends Component {
         /* if debug display operation params */
         log.trace("{} – {}", apiFunc, msg.toString());
 
-        return this.conn.call(apiFunc, msg);
+        this.conn.call(apiFunc, msg).then(message -> {
+            if (cmp.equals("v")) {
+                /* vertex */
+                deferred.resolve(ComponentHelper.toVertexArray(message));
+            } else {
+                /* edge */
+                deferred.resolve(ComponentHelper.toEdgeArray(message));
+            }
+
+        }, deferred::reject);
+
+        return promise;
     }
 
     /**
