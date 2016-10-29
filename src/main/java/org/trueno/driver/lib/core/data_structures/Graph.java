@@ -248,10 +248,10 @@ public class Graph extends Component {
         this.conn.call(apiFunc, msg).then(message -> {
             if (cmp.equals("v")) {
                 /* vertex */
-                deferred.resolve(ComponentHelper.toVertexArray(message));
+                deferred.resolve(ComponentHelper.toVertexArray(message, this));
             } else {
                 /* edge */
-                deferred.resolve(ComponentHelper.toEdgeArray(message));
+                deferred.resolve(ComponentHelper.toEdgeArray(message, this));
             }
 
         }, deferred::reject);

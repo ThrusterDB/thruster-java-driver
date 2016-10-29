@@ -3,6 +3,7 @@ package org.trueno.driver.lib.core.utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.data_structures.Edge;
+import org.trueno.driver.lib.core.data_structures.Graph;
 import org.trueno.driver.lib.core.data_structures.Vertex;
 
 import java.util.Iterator;
@@ -12,21 +13,21 @@ import java.util.Iterator;
  */
 public class ComponentHelper {
 
-    public static JSONArray toVertexArray (JSONObject o) {
+    public static JSONArray toVertexArray (JSONObject o, Graph graph) {
         JSONArray array = new JSONArray();
 
         for(Iterator it = ((JSONArray)o.get("result")).iterator(); it.hasNext(); ) {
-            Vertex v = new Vertex(toComponent(it.next()));
+            Vertex v = new Vertex(toComponent(it.next()), graph);
             array.put(v);
         }
         return array;
     }
 
-    public static JSONArray toEdgeArray (JSONObject o) {
+    public static JSONArray toEdgeArray (JSONObject o, Graph graph) {
         JSONArray array = new JSONArray();
 
         for(Iterator it = ((JSONArray)o.get("result")).iterator(); it.hasNext(); ) {
-            Edge e = new Edge(toComponent(it.next()));
+            Edge e = new Edge(toComponent(it.next()), graph);
             array.put(e);
         }
         return array;

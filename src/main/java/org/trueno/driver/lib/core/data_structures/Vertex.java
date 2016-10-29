@@ -45,9 +45,11 @@ public class Vertex extends Component {
      * Overloaded constructor. Allows to pass by parameter a Graph, Vertex or Edge already instantiated.
      *
      * @param obj JSONObject with preset keys id, prop (properties), meta and comp (computed).
+     * @param parent Graph that contains the node.
      */
-    public Vertex(JSONObject obj) {
+    public Vertex(JSONObject obj, Graph parent) {
         super(obj);
+        this.setParentGraph(parent);
     }
 
     /**
@@ -152,11 +154,11 @@ public class Vertex extends Component {
 
             if (cmp.equals("v")) {
                 /* vertex */
-                JSONArray vertices = ComponentHelper.toVertexArray(message);
+                JSONArray vertices = ComponentHelper.toVertexArray(message, this.getParentGraph());
                 deferred.resolve(vertices);
             } else {
                 /* edge */
-                JSONArray edges = ComponentHelper.toEdgeArray(message);
+                JSONArray edges = ComponentHelper.toEdgeArray(message, this.getParentGraph());
                 deferred.resolve(edges);
             }
         }, deferred::reject);

@@ -36,9 +36,11 @@ public class Edge extends Component {
      * Overloaded constructor. Allows to pass by parameter a Edge already instantiated.
      *
      * @param obj JSONObject with preset keys id, prop (properties), meta and comp (computed).
+     * @param parent Graph that contains the edge.
      */
-    public Edge(JSONObject obj) {
+    public Edge(JSONObject obj, Graph parent) {
         super(obj);
+        this.setParentGraph(parent);
     }
 
     /**

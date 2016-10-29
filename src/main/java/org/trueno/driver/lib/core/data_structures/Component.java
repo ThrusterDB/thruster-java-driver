@@ -62,10 +62,15 @@ public class Component extends JSONObject {
     public Component(JSONObject obj) {
         super();
 
+        /* setting fields */
         this.setId(obj.get("id"));
         this.setProperty(obj.getJSONObject("prop"));
         this.setMeta(obj.getJSONObject("meta"));
         this.setComputed(obj.getJSONObject("comp"));
+        /* label */
+        if (obj.has("label")) {
+            this.setLabel(obj.get("label").toString());
+        }
     }
 
     /**
