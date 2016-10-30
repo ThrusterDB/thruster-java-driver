@@ -1,23 +1,11 @@
 package org.trueno.driver.test;
 
-import org.trueno.driver.lib.core.TruenoFactory;
-import org.trueno.driver.lib.core.data_structures.Graph;
-
 /**
+ * Temporal class for testing purpose.
+ * {@link TruenoTestFactory} shows how to instantiate a graph from the trueno factory.
+ *
  * @author Edgardo Barsallo Yi
  */
 public class TruenoTestFactory {
-
-    public static void main(String[] args) {
-
-        Graph g = TruenoFactory.getInstance("graphi");
-        g.open()
-            .then((result) -> {
-                System.out.println("open");
-            })
-            .fail((error)  -> {
-                System.out.println("error");
-            });
-
-    }
+    
 }
