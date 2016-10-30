@@ -185,11 +185,11 @@ public class TruenoTest {
         Filter filter = g1.filter().term("prop.version", 1);
         Filter filter2 = g1.filter().term("prop.name", "aura");
 
-        log.debug(doPromise(g1.fetch("g", filter)));
+        log.debug(doPromiseArray(g1.fetch("g", filter)));
 
-        log.debug(doPromise(g1.fetch("v", filter2)));
+        log.debug(doPromiseArray(g1.fetch("v", filter2)));
 
-        log.debug(doPromise(g1.fetch("e")));
+        log.debug(doPromiseArray(g1.fetch("e")));
     }
 
     @Test
@@ -472,6 +472,22 @@ public class TruenoTest {
         final String[] res = new String[1];
 
         p.then((DoneCallback<JSONObject>) success -> res[0] = ("Promise Result:" + success.toString()),
+                error -> fail((res[0] = "Promise Error:" + error.toString())));
+
+        while (true) {
+            if (!p.isPending()) {
+                assertTrue(p.isResolved());
+                break;
+            }
+        }
+
+        return res[0];
+    }
+
+    private static String doPromiseArray(Promise<JSONArray, JSONObject, Integer> p) {
+        final String[] res = new String[1];
+
+        p.then((DoneCallback<JSONArray>) success -> res[0] = ("Promise Result:" + success.toString()),
                 error -> fail((res[0] = "Promise Error:" + error.toString())));
 
         while (true) {
