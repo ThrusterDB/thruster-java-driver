@@ -6,7 +6,7 @@ import org.trueno.driver.lib.core.data_structures.Graph;
 /**
  * @author Edgardo Barsallo Yi
  */
-public class TruenoTest {
+public class TruenoTestFactory {
 
     public static void main(String[] args) {
 
