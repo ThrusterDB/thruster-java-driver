@@ -4,8 +4,6 @@ import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 
 /**
@@ -19,16 +17,14 @@ public class Compute extends Component {
     private JSONObject computeParameters;
     private Algorithm algorithm;
 
-    private final Logger log = LoggerFactory.getLogger(Compute.class.getName());
-
     /**
      * Create Compute Instance. Initialize fields, set Component type to 'c'.
      */
     public Compute() {
-        this.setType("c");
+        this.setType(ComponentType.COMPUTE);
 
-        setAlgorithm(Algorithm.NONE);
-        setComputeParameters(new JSONObject());
+        this.setAlgorithm(Algorithm.NONE);
+        this.setComputeParameters(new JSONObject());
     }
 
     /**
@@ -70,34 +66,31 @@ public class Compute extends Component {
      */
     public Promise<JSONObject, JSONObject, Integer> deploy() {
         final String apiFun = "ex_compute";
-
-        /* Instantiating deferred object */
         final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-        /* Extracting promise */
         Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         if (!this.validateGraphLabel()) {
-            deferred.reject(new JSONObject().put("error", "Graph label not set"));
-            return promise;
+            log.error("Graph label is empty");
+            deferred.reject(new JSONObject().put("error", "Graph label is empty"));
         }
+        else {
+            this.setId(this.getLabel());
 
-        this.setId(this.getLabel());
+            Message msg = new Message();
 
-        Message msg = new Message();
+            msg.setPayload(new JSONObject()
+                    .put("graph", this.getLabel())
+                    .put("algorithmType", this.algorithm)
+                    .put("subgraph", "schema")
+                    .put("parameters", this.computeParameters));
 
-        msg.setPayload(new JSONObject()
-                .put("graph", this.getLabel())
-                .put("algorithmType", this.algorithm)
-                .put("subgraph", "schema")
-                .put("parameters", this.computeParameters));
+            log.debug("{} – {}", apiFun, msg.toString(2));
 
-        log.trace("{} – {}", apiFun, msg.toString(2));
-
-        this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
-            this.setJobId(((Component)message).getJobId());
-            deferred.resolve(message);
-        }, deferred::reject);
-
+            this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
+                this.setJobId(message.get("_jobId"));
+                deferred.resolve(message);
+            }, deferred::reject);
+        }
         return promise;
     }
 
@@ -108,22 +101,27 @@ public class Compute extends Component {
      */
     public Promise<JSONObject, JSONObject, Integer> jobStatus(String jobId) {
         final String apiFun = "ex_computeJobStatus";
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+            log.error("Graph label is empty");
+            deferred.reject(new JSONObject().put("error", "Graph label is empty"));
+        }
+        else {
+            Message msg = new Message();
 
-            deferred.reject(new JSONObject().put("error", "Graph label not set"));
-            return promise;
+            msg.setPayload(new JSONObject().put("jobId", jobId));
+
+            log.debug("{} – {}", apiFun, msg.toString(2));
+
+            this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
+                this.setJobId(message.get("status"));
+                deferred.resolve(message);
+            }, deferred::reject);
         }
 
-        Message msg = new Message();
-
-        msg.setPayload(new JSONObject().put("jobId", jobId));
-
-        log.trace("{} – {}", apiFun, msg.toString(2));
-
-        return this.getParentGraph().getConn().call(apiFun, msg);
+        return promise;
     }
 
     /**
@@ -133,22 +131,47 @@ public class Compute extends Component {
      */
     public Promise<JSONObject, JSONObject, Integer> jobResult(String jobId) {
         final String apiFun = "ex_computeJobResult";
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-            deferred.reject(new JSONObject().put("error", "Graph label not set"));
+            log.error("Graph label is empty");
+            deferred.reject(new JSONObject().put("error", "Graph label is empty"));
             return promise;
         }
+        else {
+            Message msg = new Message();
+
+            msg.setPayload(new JSONObject().put("jobId", jobId));
+
+            log.debug("{} – {}", apiFun, msg.toString(2));
+
+            this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
+                this.setJobId(message.get("result"));
+                deferred.resolve(message);
+            }, deferred::reject);
+        }
+
+        return promise;
+    }
+
+    /**
+     *
+     */
+    public Promise<JSONObject, JSONObject, Integer> getAlgorithms() {
+        final String apiFun = "ex_getComputeAlgorithms";
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         Message msg = new Message();
 
-        msg.setPayload(new JSONObject().put("jobId", jobId));
+        msg.setPayload(new JSONObject().put("getAlgorithms", true));
 
-        log.trace("{} – {}", apiFun, msg.toString(2));
+        log.debug("{} – {}", apiFun, msg.toString(2));
 
-        return this.getParentGraph().getConn().call(apiFun, msg);
+        this.getParentGraph().getConn().call(apiFun, msg).then(deferred::resolve, deferred::reject);
+
+        return promise;
     }
 }
 

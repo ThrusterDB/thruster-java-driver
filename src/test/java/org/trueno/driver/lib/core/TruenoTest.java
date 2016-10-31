@@ -44,7 +44,7 @@ public class TruenoTest {
 
         trueno.connect(
                 connSocket -> LoggerFactory.getLogger(TruenoTest.class.getName()).debug("Connected: " + connSocket.id()),
-                discSocket -> LoggerFactory.getLogger(TruenoTest.class.getName()).debug("Disconnected"));
+                discSocket -> LoggerFactory.getLogger(TruenoTest.class.getName()).debug("Disconnected" + discSocket.id()));
 
         try {
             Thread.sleep(750);
@@ -86,8 +86,8 @@ public class TruenoTest {
         }
 
         //Destroy Graphs
-        LoggerFactory.getLogger(TruenoTest.class.getName()).debug(doPromise(g1.destroy("g", new Filter())));
-        LoggerFactory.getLogger(TruenoTest.class.getName()).debug(doPromise(g2.destroy("g", new Filter())));
+        LoggerFactory.getLogger(TruenoTest.class.getName()).debug(doPromise(g1.destroy()));
+        LoggerFactory.getLogger(TruenoTest.class.getName()).debug(doPromise(g2.destroy()));
 
         trueno.disconnect();
     }
@@ -174,9 +174,9 @@ public class TruenoTest {
     public void CountVerticesInGraph() {
         Filter filter = g1.filter().term("prop.name", "aura");
 
-        log.debug(doPromise(g1.count("v", filter)));
+        log.debug(doPromise(g1.count(ComponentType.VERTEX, filter)));
 
-        log.debug(doPromise(g1.count("v")));
+        log.debug(doPromise(g1.count(ComponentType.VERTEX)));
     }
 
     @Test
@@ -185,11 +185,11 @@ public class TruenoTest {
         Filter filter = g1.filter().term("prop.version", 1);
         Filter filter2 = g1.filter().term("prop.name", "aura");
 
-        log.debug(doPromiseArray(g1.fetch("g", filter)));
+        log.debug(doPromiseArray(g1.fetch(ComponentType.GRAPH, filter)));
 
-        log.debug(doPromiseArray(g1.fetch("v", filter2)));
+        log.debug(doPromiseArray(g1.fetch(ComponentType.VERTEX, filter2)));
 
-        log.debug(doPromiseArray(g1.fetch("e")));
+        log.debug(doPromiseArray(g1.fetch(ComponentType.EDGE)));
     }
 
     @Test
@@ -279,142 +279,139 @@ public class TruenoTest {
         log.debug(doPromise(g1.closeBatch()));
     }
 
-    @Test
-    @Category(FastTests.class)
-    @Ignore
-    public void ComputePageRank() {
-        Compute c = g1.getCompute();
-
-        c.setAlgorithm(Algorithm.PAGE_RANK);
-        c.setComputeParameters(new JSONObject()
-                .put("schema", g1.getLabel())
-                .put("TOL", "0.001")
-                .put("alpha", "0.05")
-                .put("persisted", "true")
-                .put("persistedTable", "pr11"));
-
-        final Boolean[] done = {false};
-        final Integer[] cnt = {0};
-
-        c.deploy().then(success -> log.debug("Job ID: " + c.getJobId()), error -> {
-            log.debug("Promise error: " + error.toString());
-            fail("Promise error: " + error.toString());
-        });
-
-        while (!done[0] && cnt[0] < 10) {
-            c.jobStatus(c.getJobId()).then(status -> {
-                log.debug("Status: " + status.toString());
-                cnt[0]++;
-
-                if (status.get("status").toString().equals(JobStatus.FINISHED.toString()) ||
-                        status.get("status").toString().equals(JobStatus.ERROR.toString())) {
-                    done[0] = true;
-                }
-            }, error -> {
-                log.debug("Promise error: " + error.toString());
-                fail("Promise error: " + error.toString());
-                done[0] = true;
-            });
-        }
-
-        assertTrue(done[0]);
-        log.debug(doPromise(c.jobResult(c.getJobId())));
-    }
-
-    @Test
-    @Category(FastTests.class)
-    @Ignore
-    public void ComputeConnectedComponent() {
-        Compute c = g1.getCompute();
-
-        c.setAlgorithm(Algorithm.CONNECTED_COMPONENTS);
-        c.setComputeParameters(new JSONObject()
-                .put("schema", g1.getLabel())
-                .put("TOL", "false")
-                .put("alpha", "0.05")
-                .put("persisted", "true")
-                .put("persistedTable", "pr11"));
-
-        final Boolean[] done = {false};
-        final Integer[] cnt = {0};
-
-        c.deploy().then(success -> log.debug("Job ID: " + c.getJobId()), error -> {
-            log.debug("Promise error: " + error.toString());
-            fail("Promise error: " + error.toString());
-        });
-
-        while (!done[0] && cnt[0] < 10) {
-            c.jobStatus(c.getJobId()).then(status -> {
-                log.debug("Status: " + status.toString());
-                cnt[0]++;
-
-                if (status.get("status").toString().equals(JobStatus.FINISHED.toString()) ||
-                        status.get("status").toString().equals(JobStatus.ERROR.toString())) {
-                    done[0] = true;
-                }
-            }, error -> {
-                log.debug("Promise error: " + error.toString());
-                fail("Promise error: " + error.toString());
-                done[0] = true;
-            });
-        }
-
-        assertTrue(done[0]);
-        log.debug(doPromise(c.jobResult(c.getJobId())));
-    }
-
-    @Test
-    @Category(FastTests.class)
-    @Ignore
-    public void ComputeTriangleCount() {
-        Compute c = g1.getCompute();
-
-        c.setAlgorithm(Algorithm.TRIANGLE_COUNTING);
-        c.setComputeParameters(new JSONObject()
-                .put("schema", g1.getLabel())
-                .put("TOL", "false")
-                .put("alpha", "0.05")
-                .put("persisted", "true")
-                .put("persistedTable", "pr11"));
-
-        final Boolean[] done = {false};
-        final Integer[] cnt = {0};
-
-        c.deploy().then(success -> log.debug("Job ID: " + c.getJobId()), error -> {
-            log.debug("Promise error: " + error.toString());
-            fail("Promise error: " + error.toString());
-        });
-
-        while (!done[0] && cnt[0] < 10) {
-            c.jobStatus(c.getJobId()).then(status -> {
-                log.debug("Status: " + status.toString());
-                cnt[0]++;
-
-                if (status.get("status").toString().equals(JobStatus.FINISHED.toString()) ||
-                        status.get("status").toString().equals(JobStatus.ERROR.toString())) {
-                    done[0] = true;
-                }
-            }, error -> {
-                log.debug("Promise error: " + error.toString());
-                fail("Promise error: " + error.toString());
-                done[0] = true;
-            });
-        }
-
-        assertTrue(done[0]);
-        log.debug(doPromise(c.jobResult(c.getJobId())));
-    }
+//    @Test
+//    @Category(FastTests.class)
+//    public void ComputePageRank() {
+//        Compute c = g1.getCompute();
+//
+//        c.setAlgorithm(Algorithm.PAGE_RANK);
+//        c.setComputeParameters(new JSONObject()
+//                .put("schema", g1.getLabel())
+//                .put("TOL", "0.001")
+//                .put("alpha", "0.05")
+//                .put("persisted", "true")
+//                .put("persistedTable", "pr11"));
+//
+//        final Boolean[] done = {false};
+//        final Integer[] cnt = {0};
+//
+//        c.deploy().then(success -> log.debug("Job ID: " + c.getJobId()), error -> {
+//            log.debug("Promise error: " + error.toString());
+//            fail("Promise error: " + error.toString());
+//        });
+//
+//        while (!done[0] && cnt[0] < 10) {
+//            c.jobStatus(c.getJobId()).then(status -> {
+//                log.debug("Status: " + status.toString());
+//                cnt[0]++;
+//
+//                if (status.get("status").toString().equals(JobStatus.FINISHED.toString()) ||
+//                        status.get("status").toString().equals(JobStatus.ERROR.toString())) {
+//                    done[0] = true;
+//                }
+//            }, error -> {
+//                log.debug("Promise error: " + error.toString());
+//                fail("Promise error: " + error.toString());
+//                done[0] = true;
+//            });
+//        }
+//
+//        assertTrue(done[0]);
+//        log.debug(doPromise(c.jobResult(c.getJobId())));
+//    }
+//
+//    @Test
+//    @Category(FastTests.class)
+//    public void ComputeConnectedComponent() {
+//        Compute c = g1.getCompute();
+//
+//        c.setAlgorithm(Algorithm.CONNECTED_COMPONENTS);
+//        c.setComputeParameters(new JSONObject()
+//                .put("schema", g1.getLabel())
+//                .put("TOL", "false")
+//                .put("alpha", "0.05")
+//                .put("persisted", "true")
+//                .put("persistedTable", "pr11"));
+//
+//        final Boolean[] done = {false};
+//        final Integer[] cnt = {0};
+//
+//        c.deploy().then(success -> log.debug("Job ID: " + c.getJobId()), error -> {
+//            log.debug("Promise error: " + error.toString());
+//            fail("Promise error: " + error.toString());
+//        });
+//
+//        while (!done[0] && cnt[0] < 10) {
+//            c.jobStatus(c.getJobId()).then(status -> {
+//                log.debug("Status: " + status.toString());
+//                cnt[0]++;
+//
+//                if (status.get("status").toString().equals(JobStatus.FINISHED.toString()) ||
+//                        status.get("status").toString().equals(JobStatus.ERROR.toString())) {
+//                    done[0] = true;
+//                }
+//            }, error -> {
+//                log.debug("Promise error: " + error.toString());
+//                fail("Promise error: " + error.toString());
+//                done[0] = true;
+//            });
+//        }
+//
+//        assertTrue(done[0]);
+//        log.debug(doPromise(c.jobResult(c.getJobId())));
+//    }
+//
+//    @Test
+//    @Category(FastTests.class)
+//    public void ComputeTriangleCount() {
+//        Compute c = g1.getCompute();
+//
+//        c.setAlgorithm(Algorithm.TRIANGLE_COUNTING);
+//        c.setComputeParameters(new JSONObject()
+//                .put("schema", g1.getLabel())
+//                .put("TOL", "false")
+//                .put("alpha", "0.05")
+//                .put("persisted", "true")
+//                .put("persistedTable", "pr11"));
+//
+//        final Boolean[] done = {false};
+//        final Integer[] cnt = {0};
+//
+//        c.deploy().then(success -> log.debug("Job ID: " + c.getJobId()), error -> {
+//            log.debug("Promise error: " + error.toString());
+//            fail("Promise error: " + error.toString());
+//        });
+//
+//        while (!done[0] && cnt[0] < 10) {
+//            c.jobStatus(c.getJobId()).then(status -> {
+//                log.debug("Status: " + status.toString());
+//                cnt[0]++;
+//
+//                if (status.get("status").toString().equals(JobStatus.FINISHED.toString()) ||
+//                        status.get("status").toString().equals(JobStatus.ERROR.toString())) {
+//                    done[0] = true;
+//                }
+//            }, error -> {
+//                log.debug("Promise error: " + error.toString());
+//                fail("Promise error: " + error.toString());
+//                done[0] = true;
+//            });
+//        }
+//
+//        assertTrue(done[0]);
+//        log.debug(doPromise(c.jobResult(c.getJobId())));
+//    }
 
     @Test
     @Category(FastTests.class)
     public void DeleteVertex() {
-        doPromise(g1.vertices()[0].destroy());
+        doPromise(g1.vertices().get(0).destroy());
     }
 
     @Test
     @Category(FastTests.class)
     public void DeleteEdge() {
-        doPromise(g1.edges()[0].destroy());
+        doPromise(g1.edges().get(0).destroy());
     }
 
     @Test

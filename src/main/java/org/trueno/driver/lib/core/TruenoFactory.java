@@ -70,7 +70,7 @@ public class TruenoFactory {
     }
 
     public static Graph getInstance(String database) {
-        HashMap<String, Object> map = new HashMap();
+        HashMap<String, Object> map = new HashMap<>();
         map.put(CONFIG_DATABASE, database);
 
         if (trueno == null)

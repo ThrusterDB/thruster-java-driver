@@ -5,19 +5,10 @@ import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Callback;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
-import org.trueno.driver.lib.core.data_structures.Component;
-import org.trueno.driver.lib.core.data_structures.Edge;
-import org.trueno.driver.lib.core.data_structures.Graph;
-import org.trueno.driver.lib.core.data_structures.Vertex;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.logging.LogManager;
+import org.trueno.driver.lib.core.data_structures.*;
 
 /**
  * TruenoDB Java Driver – Provides interaction with the Trueno Database
@@ -29,24 +20,18 @@ import java.util.logging.LogManager;
  */
 
 public class Trueno {
-
-    /* Private properties */
     private String host;
     private int port;
     private RPC rpc;
     private boolean isConnected;
 
-    private final Logger log = LoggerFactory.getLogger(Trueno.class.getName());
-
     public static final String DEFAULT_HOST = "http://localhost";
-    public static final int    DEFAULT_PORT = 8000;
+    public static final int DEFAULT_PORT = 8000;
 
     /**
      * Default Constructor. Initializes TruenoDB connection parameters to localhost:8000
      */
     public Trueno() {
-
-        /* Set default properties */
         this.host = DEFAULT_HOST;
         this.port = DEFAULT_PORT;
         this.isConnected = false;
@@ -60,10 +45,8 @@ public class Trueno {
      * @param port Port number to intialize the TruenoDB connection.
      */
     public Trueno(String host, Integer port) {
-
-        /* calling default constructor */
         this();
-        /* Set parameters */
+
         this.host = host != null ? host : this.host;
         this.port = port != null ? port : this.port;
         this.rpc = new RPC(this.host, this.port);
@@ -76,18 +59,13 @@ public class Trueno {
      * @param discCallback callback function to be executed if connection is unsuccessful.
      */
     public Trueno connect(final Callback connCallback, final Callback discCallback) {
-        /* Connect the rpc object */
         this.rpc.connect(
-                /* on connect callback */
                 socket -> {
                     this.isConnected = true;
-                    log.info("[{}] Trueno connected", socket.id());
                     connCallback.method(socket);
                 },
-                /* on disconnect callback */
                 socket -> {
                     this.isConnected = false;
-                    log.info("[{}] Trueno disconnected", socket.id());
                     discCallback.method(socket);
                 }
         );
@@ -173,11 +151,8 @@ public class Trueno {
      * @return A new Graph.
      */
     public Graph Graph(String label) {
-
-        Graph g = new Graph();
+        Graph g = new Graph(label);
         g.setConn(this.rpc);
-        g.setLabel(label);
-        g.setId(label);
 
         return g;
     }
@@ -209,13 +184,13 @@ public class Trueno {
 
             for (Object o : message.getJSONArray("result")) {
                 JSONObject current = (JSONObject) o;
-                switch (current.get("_type").toString()) {
-                    case "v":
+                switch ((ComponentType) current.get("_type")) {
+                    case VERTEX:
                         Vertex v = new Vertex();
                         v.setId(current.get("_id"));
                         vertices.put(v);
                         break;
-                    case "e":
+                    case EDGE:
                         Edge e = new Edge();
                         e.setId(current);
                         edges.put(e);

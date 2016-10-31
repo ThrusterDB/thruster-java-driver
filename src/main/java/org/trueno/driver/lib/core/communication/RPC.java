@@ -29,10 +29,9 @@ public class RPC {
 
     private String host;
     private int port;
-    private HashMap<String, Method> procedures;
     private Socket socket;
 
-    private final Logger log = LoggerFactory.getLogger(RPC.class.getName());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * Default Constructor
@@ -42,7 +41,6 @@ public class RPC {
         /* Set default properties */
         this.host = "http://localhost";
         this.port = 8000;
-        this.procedures = new HashMap<>();
         this.socket = null;
     }
 
@@ -54,9 +52,8 @@ public class RPC {
      */
     public RPC(String host, Integer port) {
 
-        /* calling default constructor */
         this();
-        /* Set parameters */
+
         this.host = host != null ? host : this.host;
         this.port = port != null ? port : this.port;
     }
@@ -70,19 +67,13 @@ public class RPC {
      */
     public Promise<JSONObject, JSONObject, Integer> call(final String method, final JSONObject arg) {
 
-        /* Instantiating deferred object */
         final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-
-        /* Extracting promise */
         Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
-        /* Sending event */
         this.socket.emit(method, arg, (Ack) objects -> {
 
-            /* casting json object */
             JSONObject args = (JSONObject) objects[0];
 
-            /* checking the result and resolving or rejecting */
             try {
                 JSONObject value = new JSONObject();
                 value.put("result", args.get("_payload"));
@@ -110,7 +101,6 @@ public class RPC {
      * @param discCallback Callback function to be executed if connection is unsuccessful.
      */
     public void connect(final Callback connCallback, final Callback discCallback) {
-        /* instantiating the socket */
         try {
             this.socket = IO.socket(this.host + ":" + this.port);
         } catch (URISyntaxException e) {
@@ -121,7 +111,6 @@ public class RPC {
                 .on(Socket.EVENT_CONNECT, args -> connCallback.method(this.socket))
                 .on(Socket.EVENT_DISCONNECT, args -> discCallback.method(this.socket));
 
-        /* Connecting Socket */
         this.socket.connect();
     }
 

@@ -1,6 +1,5 @@
 package org.trueno.driver.lib.core.data_structures;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.jdeferred.Deferred;
 import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * <b>Component Class</b>
@@ -23,20 +21,15 @@ import java.util.regex.Pattern;
  */
 public class Component extends JSONObject {
 
-    private String ref;
-    private String type;
+    private ComponentType type;
     private Graph parentGraph;
 
-    private final Logger log = LoggerFactory.getLogger(Component.class.getName());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * Default constructor.
      */
     public Component() {
-        /* Initialize JSON properties */
-        /* set UUID */
-        this.ref = UUID.randomUUID().toString();
-
         /* setting id */
         this.put("id", new Object());
 
@@ -52,6 +45,9 @@ public class Component extends JSONObject {
         this.put("comp", new JSONObject());
         /* Setting meta fields */
         this.put("meta", new JSONObject());
+
+        this.parentGraph = null;
+        this.type = ComponentType.UNDEFINED;
     }
 
     /**
@@ -74,21 +70,12 @@ public class Component extends JSONObject {
     }
 
     /**
-     * Returns the value associated with the reference ID of this Component.
-     *
-     * @return the reference ID of this Component
-     */
-    public String getRef() {
-        return this.ref;
-    }
-
-    /**
      * Returns the value associated with the ID of this Component.
      *
      * @return the ID of this Component
      */
     public Object getId() {
-        return this.get("id");
+        return this.get("id").toString();
     }
 
     /**
@@ -150,7 +137,7 @@ public class Component extends JSONObject {
      *
      * @return the type of this Component (v = vertex, e = edge).
      */
-    public String getType() {
+    public ComponentType getType() {
         return this.type;
     }
 
@@ -159,7 +146,7 @@ public class Component extends JSONObject {
      *
      * @param type the new type value (v = vertex, e = edge).
      */
-    public void setType(String type) {
+    public void setType(ComponentType type) {
         this.type = type;
     }
 
@@ -358,52 +345,42 @@ public class Component extends JSONObject {
     public Promise<JSONObject, JSONObject, Integer> persist() {
         final String apiFun = "ex_persist";
 
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
+
         if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-            log.error("{} – Graph label not set", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
-            return promise;
-        }
-
-        /* validate edge source and target */
-        if (this.type.equals("e")) {
-            if ((!((Edge) this).hasSource()) || (!((Edge) this).hasTarget())) {
-                final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-                Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
+            log.error("{} – Graph label is empty", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label is empty"));
+        } else if (this.type.equals(ComponentType.EDGE) && ((!((Edge) this).hasSource()) || (!((Edge) this).hasTarget()))) {
                 log.error("Edge source and target are required");
                 deferred.reject(new JSONObject().put("error", this.getId() + " – Edge source and target are required"));
-                return promise;
+        } else {
+            Message msg = new Message();
+            JSONObject payload = new JSONObject();
+
+            payload.put("graph", this.parentGraph.getLabel());
+            payload.put("type", this.type.toString());
+            payload.put("obj", this);
+
+            msg.setPayload(payload);
+
+            log.debug("{} – {}", apiFun, msg.toString(2));
+
+            if (this.parentGraph.isBulkOpen()) {
+                log.trace("Persisting using bulk operation");
+                this.parentGraph.pushOperation(apiFun, msg.getPayload());
+                deferred.resolve(new JSONObject().put("result", "Pushed operation successfully."));
+
+            } else {
+                log.trace("Persisting using Promise");
+                this.parentGraph.getConn().call(apiFun, msg).then(message -> {
+                    this.setId(((JSONObject) message.getJSONArray("result").get(1)).get("_id"));
+                    deferred.resolve(((JSONObject) message.getJSONArray("result").get(1)));
+                }, deferred::reject);
             }
         }
 
-        Message msg = new Message();
-        JSONObject payload = new JSONObject();
-
-        payload.put("graph", this.parentGraph.getLabel());
-        payload.put("type", this.type);
-        payload.put("obj", this);
-
-        msg.setPayload(payload);
-
-        /* temporal */
-        log.info("{} – {}", apiFun, msg.toString(2));
-
-        log.trace("{} – {}", apiFun, msg.toString(2));
-
-        if (this.parentGraph.isBulkOpen()) {
-            log.trace("Persisting using bulk operation");
-            this.parentGraph.pushOperation(apiFun, msg.getPayload());
-            return null;
-
-        } else {
-            log.trace("Persisting using Promise");
-            return this.parentGraph.getConn().call(apiFun, msg).then(message -> {
-                this.setId(((JSONObject) message.getJSONArray("result").get(1)).get("_id"));
-            });
-        }
+        return promise;
     }
 
     /**
@@ -413,56 +390,43 @@ public class Component extends JSONObject {
      * @param ftr Filter to be applied.
      * @return Promise with the async destruction result.
      */
-    public Promise<JSONObject, JSONObject, Integer> destroy(String cmp, Filter ftr) {
+    public Promise<JSONObject, JSONObject, Integer> destroy(ComponentType cmp, Filter ftr) {
         final String apiFun = "ex_destroy";
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
-        //Validate presence of graph label
         if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-            log.error("{} – Graph label not set", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
-            return promise;
-        }
-
-        if (this.type.equals("g") && cmp != null) {
-            if (!this.validateCmp(cmp)) {
-                final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-                Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
+            log.error("{} – Graph label is empty", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label is empty"));
+        } else if (cmp.invalid()) {
+            if (!this.type.equals(ComponentType.GRAPH)) {
                 log.error("{} – Invalid Component", this.getId());
                 deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
-                return promise;
             }
         } else if (this.getId() == null) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
             log.error("{} – Component ID is required", this.getId());
             deferred.reject(new JSONObject().put("error", this.getId() + " – Component ID is required"));
-            return promise;
-        }
-
-        Message msg = new Message();
-        JSONObject payload = new JSONObject();
-
-        payload.put("graph", this.getParentGraph().getLabel());
-
-        if (this.type.equals("g")) {
-            payload.put("type", cmp);
-            payload.put("ftr", ftr != null ? ftr.getFilters() : new Filter().getFilters());
         } else {
-            payload.put("type", this.type);
+            Message msg = new Message();
+            JSONObject payload = new JSONObject();
+
+            payload.put("graph", this.getParentGraph().getLabel());
+            payload.put("type", this.type.toString());
+            payload.put("ftr", ftr != null ? ftr.getFilters() : new Filter().getFilters());
+
+            if (this.type.equals(ComponentType.GRAPH))
+                payload.put("obj", new JSONObject().put("id", this.getLabel()));
+            else
+                payload.put("obj", new JSONObject().put("id", this.getId()));
+
+            msg.setPayload(payload);
+
+            log.debug("{} – {}", apiFun, payload.toString(2));
+
+            this.parentGraph.getConn().call(apiFun, msg).then(deferred::resolve, deferred::reject);
         }
 
-        payload.put("obj", new JSONObject().put("id", this.getId()));
-
-        msg.setPayload(payload);
-
-        log.trace("{} – {}", apiFun, payload.toString(2));
-
-        return this.parentGraph.getConn().call(apiFun, msg);
+        return promise;
     }
 
     /**
@@ -471,7 +435,7 @@ public class Component extends JSONObject {
      * @param cmp Component to be destroyed.
      * @return Promise with the async destruction result.
      */
-    public Promise<JSONObject, JSONObject, Integer> destroy(String cmp) {
+    public Promise<JSONObject, JSONObject, Integer> destroy(ComponentType cmp) {
         return this.destroy(cmp, null);
     }
 
@@ -481,19 +445,6 @@ public class Component extends JSONObject {
      * @return Promise with the async destruction result.
      */
     public Promise<JSONObject, JSONObject, Integer> destroy() {
-        return this.destroy(null, null);
-    }
-
-    /**
-     * Validate type of this Component.
-     *
-     * @param cmp this component type ('v','V', 'e','E', 'g', or 'G').
-     */
-    boolean validateCmp(String cmp) {
-        if (!Pattern.compile("v|V|e|E|g|G").matcher(cmp).find()) {
-            log.error("Component must be one of the following: 'g', 'G', v','V', 'e','E', provided value: " + cmp);
-            return false;
-        }
-        return true;
+        return this.destroy(this.getType(), null);
     }
 }

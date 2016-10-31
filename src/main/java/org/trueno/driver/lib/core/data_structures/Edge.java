@@ -19,8 +19,6 @@ import org.trueno.driver.lib.core.utils.Pair;
  */
 public class Edge extends Component {
 
-    private final Logger log = LoggerFactory.getLogger(Edge.class.getName());
-
     /**
      * Initializes a new Edge
      */
@@ -29,7 +27,7 @@ public class Edge extends Component {
         this.put("target", "");
         this.put("partition", "");
 
-        this.setType("e");
+        this.setType(ComponentType.EDGE);
     }
 
     /**
@@ -51,7 +49,7 @@ public class Edge extends Component {
         this.put("target", target);
         this.put("partition", "");
 
-        this.setType("e");
+        this.setType(ComponentType.EDGE);
     }
 
     /**
@@ -152,35 +150,34 @@ public class Edge extends Component {
      */
     public Promise<JSONObject, JSONObject, Integer> vertices() {
         final String apiFun = "ex_vertices";
-
-        if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-            log.error("{} – Graph label not set", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
-            return promise;
-        }
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         if (!this.hasId()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
             log.error("Edge id is required, set this edge instance id or load edge.");
             deferred.reject(new JSONObject().put("error", "Edge id is required, set this edge instance id or load edge."));
-            return promise;
+        }
+        else if (!this.validateGraphLabel()) {
+            log.error("{} – Graph label is empty", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label is empty"));
+        }
+        else {
+            Message msg = new Message();
+            JSONObject payload = new JSONObject();
+
+            payload.put("graph", this.getParentGraph().getLabel());
+            payload.put("id", this.getId());
+
+            msg.setPayload(payload);
+
+            log.debug("{} – {}", apiFun, msg.toString());
+
+            this.getParentGraph().getConn().call(apiFun, msg).then(result -> {
+                deferred.resolve(new JSONObject().put("source", new Vertex((JSONObject)result.get("source"), this.getParentGraph()))
+                        .put("target", new Vertex((JSONObject)result.get("target"), this.getParentGraph())));
+            });
         }
 
-        Message msg = new Message();
-        JSONObject payload = new JSONObject();
-
-        payload.put("graph", this.getParentGraph().getLabel());
-        payload.put("id", this.getId());
-
-        msg.setPayload(payload);
-
-        log.trace("{} – {}", apiFun, msg.toString());
-
-        return this.getParentGraph().getConn().call(apiFun, msg);
+        return promise;
     }
 }

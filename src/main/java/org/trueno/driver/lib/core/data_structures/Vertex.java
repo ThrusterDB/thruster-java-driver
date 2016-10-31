@@ -5,19 +5,8 @@ import org.jdeferred.Promise;
 import org.jdeferred.impl.DeferredObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.utils.ComponentHelper;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-
-
-// FIXME: Standarize all promise calls; instead of returning a JSONObject should be a JSONArray  (list of Component)
-// FIXME: Return of promise should be iterators and must be support streams
 
 /**
  * <b>Vertex Class</b>
@@ -30,15 +19,12 @@ import java.util.Iterator;
  */
 public class Vertex extends Component {
 
-    private final Logger log = LoggerFactory.getLogger(Vertex.class.getName());
-
     /**
      * Create a Vertex instance
      */
     public Vertex() {
-        // TODO: do something with 'partition' field.
         this.put("partition", 0);
-        this.setType("v");
+        this.setType(ComponentType.VERTEX);
     }
 
     /**
@@ -86,8 +72,8 @@ public class Vertex extends Component {
      * @param filter filter for the neighbor search
      * @return Promise with the neighbors result
      */
-    public Promise<JSONArray, JSONObject, Integer> in(String cmp, Filter filter) {
-        return neighbors(cmp, filter, "in");
+    public Promise<JSONArray, JSONObject, Integer> in(ComponentType cmp, Filter filter, Filter secondary) {
+        return neighbors(cmp, filter, secondary, "in");
     }
 
     /**
@@ -97,8 +83,8 @@ public class Vertex extends Component {
      * @param filter filter for the neighbor search
      * @return Promise with the neighbors result
      */
-    public Promise<JSONArray, JSONObject, Integer> out(String cmp, Filter filter) {
-        return neighbors(cmp, filter, "out");
+    public Promise<JSONArray, JSONObject, Integer> out(ComponentType cmp, Filter filter, Filter secondary) {
+        return neighbors(cmp, filter, secondary, "out");
     }
 
     /**
@@ -109,59 +95,55 @@ public class Vertex extends Component {
      * @param direction neighbors search direction (in, out).
      * @return Promise with the neighbors search result
      */
-    public Promise<JSONArray, JSONObject, Integer> neighbors(String cmp, Filter filter, String direction) {
+    private Promise<JSONArray, JSONObject, Integer> neighbors(ComponentType cmp, Filter filter, Filter secondary, String direction) {
         final String apiFun = "ex_neighbors";
-
         final Deferred<JSONArray, JSONObject, Integer> deferred = new DeferredObject<>();
         Promise<JSONArray, JSONObject, Integer> promise = deferred.promise();
 
-        /* Validate the component */
-        if (!this.validateCmp(cmp)) {
-            log.error("{} – Invalid Component", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
-
-            return promise;
-        }
-
-        /* If label is not present throw error */
-        if (!this.validateGraphLabel()) {
-            log.error("{} – Graph label not set", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
-
-            return promise;
-        }
-
         if (!this.hasId()) {
             log.error("Vertex ID is required.");
+            deferred.reject(new JSONObject().put("error", "Vertex ID is required."));
         }
+        else if (cmp.invalid()) {
+            log.error("{} – Invalid Component", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
+        }
+        else if (!this.validateGraphLabel()) {
+            log.error("{} – Graph label is empty", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label is empty"));
+        }
+        else {
+            Message msg = new Message();
+            JSONObject payload = new JSONObject();
 
-        Message msg = new Message();
-        JSONObject payload = new JSONObject();
+            payload.put("graph", this.getParentGraph().getLabel());
+            payload.put("id", this.getId());
+            payload.put("dir", direction);
+            payload.put("cmp", cmp.toString());
 
-        payload.put("graph", this.getParentGraph().getLabel());
-        payload.put("id", this.getId());
-        payload.put("dir", direction);
-        payload.put("cmp", cmp.toLowerCase());
+            if (filter != null)
+                payload.put("ftr", filter.getFilters());
 
-        if (filter != null)
-            payload.put("ftr", filter.getFilters());
+            if (secondary != null)
+                payload.put("sFtr", secondary.getFilters());
 
-        msg.setPayload(payload);
+            msg.setPayload(payload);
 
-        log.trace("{} {} – {}", apiFun, direction, msg.toString());
+            log.debug("{} {} – {}", apiFun, direction, msg.toString(2));
 
-        this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
-
-            if (cmp.equals("v")) {
-                /* vertex */
-                JSONArray vertices = ComponentHelper.toVertexArray(message, this.getParentGraph());
-                deferred.resolve(vertices);
-            } else {
-                /* edge */
-                JSONArray edges = ComponentHelper.toEdgeArray(message, this.getParentGraph());
-                deferred.resolve(edges);
-            }
-        }, deferred::reject);
+            this.getParentGraph().getConn().call(apiFun, msg).then(message -> {
+                switch (cmp) {
+                    case VERTEX:
+                        JSONArray vertices = ComponentHelper.toVertexArray(message, this.getParentGraph());
+                        deferred.resolve(vertices);
+                        break;
+                    case EDGE:
+                        JSONArray edges = ComponentHelper.toEdgeArray(message, this.getParentGraph());
+                        deferred.resolve(edges);
+                        break;
+                }
+            }, deferred::reject);
+        }
 
         return promise;
     }
@@ -173,7 +155,7 @@ public class Vertex extends Component {
      * @param filter Filter to be applied to the neighbor search
      * @return Promise with the neighbors search result
      */
-    Promise<JSONObject, JSONObject, Integer> inDegree(String cmp, Filter filter) {
+    Promise<JSONObject, JSONObject, Integer> inDegree(ComponentType cmp, Filter filter) {
         return degree(cmp, filter, "in");
     }
 
@@ -184,7 +166,7 @@ public class Vertex extends Component {
      * @param filter Filter to be applied to the neighbor search
      * @return Promise with the neighbors search result
      */
-    Promise<JSONObject, JSONObject, Integer> outDegree(String cmp, Filter filter) {
+    Promise<JSONObject, JSONObject, Integer> outDegree(ComponentType cmp, Filter filter) {
         return degree(cmp, filter, "out");
     }
 
@@ -196,55 +178,44 @@ public class Vertex extends Component {
      * @param direction neighbors search direction (in, out).
      * @return Promise with the neighbors search result
      */
-    Promise<JSONObject, JSONObject, Integer> degree(String cmp, Filter filter, String direction) {
+    private Promise<JSONObject, JSONObject, Integer> degree(ComponentType cmp, Filter filter, String direction) {
         final String apiFun = "ex_degree";
-
-        /* Validate the component */
-        if (!this.validateCmp(cmp)) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-            log.error("{} – Invalid Component", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
-
-            return promise;
-        }
-
-        /* If label is not present throw error */
-        if (!this.validateGraphLabel()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
-            log.error("{} – Graph label not set", this.getId());
-            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label not set"));
-
-            return promise;
-        }
+        final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
+        Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
 
         if (!this.hasId()) {
-            final Deferred<JSONObject, JSONObject, Integer> deferred = new DeferredObject<>();
-            Promise<JSONObject, JSONObject, Integer> promise = deferred.promise();
-
             log.error("Vertex ID is required.");
             deferred.reject(new JSONObject().put("error", "Vertex ID is required."));
-            return promise;
+        }
+        else if (cmp.invalid()) {
+            log.error("{} – Invalid Component", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Invalid Component"));
+        }
+        else if (!this.validateGraphLabel()) {
+            log.error("{} – Graph label is empty", this.getId());
+            deferred.reject(new JSONObject().put("error", this.getId() + " – Graph label is empty"));
+        }
+        else {
+            Message msg = new Message();
+            JSONObject payload = new JSONObject();
+
+            payload.put("graph", this.getParentGraph().getLabel());
+            payload.put("id", this.getId());
+            payload.put("dir", direction);
+            payload.put("cmp", cmp.toString());
+
+            if (filter != null)
+                payload.put("ftr", filter.getFilters());
+
+            msg.setPayload(payload);
+
+            log.debug("{} {} – {}", apiFun, direction, msg.toString(2));
+
+            this.getParentGraph().getConn().call(apiFun, msg).then(result -> {
+                deferred.resolve((JSONObject)result.get("payload"));
+            });
         }
 
-        Message msg = new Message();
-        JSONObject payload = new JSONObject();
-
-        payload.put("graph", this.getParentGraph().getLabel());
-        payload.put("id", this.getId());
-        payload.put("dir", direction);
-        payload.put("cmp", cmp.toLowerCase());
-
-        if (filter != null)
-            payload.put("ftr", filter.getFilters());
-
-        msg.setPayload(payload);
-
-        log.trace("{} {} – {}", apiFun, direction, msg.toString());
-
-        return this.getParentGraph().getConn().call(apiFun, msg);
+        return promise;
     }
 }

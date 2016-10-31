@@ -1,7 +1,7 @@
 package org.trueno.driver.test;
 
 import org.trueno.driver.lib.core.Trueno;
-import org.trueno.driver.lib.core.data_structures.Filter;
+import org.trueno.driver.lib.core.data_structures.ComponentType;
 import org.trueno.driver.lib.core.data_structures.Graph;
 import org.trueno.driver.lib.core.data_structures.Vertex;
 
@@ -26,7 +26,7 @@ public class DriverTest {
                 g.open()
                     .then(x -> {
                         Vertex v;
-                        g.fetch("v", g.filter().term("prop.name", "saturn"))
+                        g.fetch(ComponentType.VERTEX, g.filter().term("prop.name", "saturn"))
                             .then(result -> {
                                 System.out.println("v --> " + result);
                             });
@@ -34,12 +34,12 @@ public class DriverTest {
                         v = g.addVertex();
                         v.setId(4);
                         /* outgoing vertices from Saturn */
-                        v.in("v", g.filter().regexp("label", "father"))
+                        v.in(ComponentType.VERTEX, g.filter().regexp("label", "father"), null)
                             .then(vertices -> {
                                 System.out.println("vertices in  <-- " + vertices);
                             });
                         /* outgoing vertices from saturn */
-                        v.out("v", null)
+                        v.out(ComponentType.VERTEX, null, null)
                                 .then(vertices -> {
                                     System.out.println("vertices out --> " + vertices);
                                 });
