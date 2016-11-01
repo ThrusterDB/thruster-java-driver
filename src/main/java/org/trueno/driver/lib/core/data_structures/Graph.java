@@ -8,7 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
 import org.trueno.driver.lib.core.communication.RPC;
-import org.trueno.driver.lib.core.utils.ComponentHelper;
 
 import java.util.ArrayList;
 

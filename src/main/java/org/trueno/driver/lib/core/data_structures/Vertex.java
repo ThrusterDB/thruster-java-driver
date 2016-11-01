@@ -6,7 +6,6 @@ import org.jdeferred.impl.DeferredObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.trueno.driver.lib.core.communication.Message;
-import org.trueno.driver.lib.core.utils.ComponentHelper;
 
 /**
  * <b>Vertex Class</b>
@@ -35,6 +34,9 @@ public class Vertex extends Component {
      */
     public Vertex(JSONObject obj, Graph parent) {
         super(obj);
+
+        this.put("partition", 0);
+        this.setType(ComponentType.VERTEX);
         this.setParentGraph(parent);
     }
 

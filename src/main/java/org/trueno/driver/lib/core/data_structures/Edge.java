@@ -38,6 +38,10 @@ public class Edge extends Component {
      */
     public Edge(JSONObject obj, Graph parent) {
         super(obj);
+
+        this.setSource(obj.get("source"));
+        this.setTarget(obj.get("target"));
+        this.setType(ComponentType.EDGE);
         this.setParentGraph(parent);
     }
 
@@ -67,8 +71,8 @@ public class Edge extends Component {
      *
      * @return Edge source
      */
-    public String getSource() {
-        return this.get("source").toString();
+    public Object getSource() {
+        return this.get("source");
     }
 
     /**
@@ -76,7 +80,7 @@ public class Edge extends Component {
      *
      * @param source new Edge source
      */
-    public void setSource(String source) {
+    public void setSource(Object source) {
         this.put("source", source);
     }
 
@@ -94,8 +98,8 @@ public class Edge extends Component {
      *
      * @return Edge target
      */
-    public String getTarget() {
-        return this.get("target").toString();
+    public Object getTarget() {
+        return this.get("target");
     }
 
     /**
@@ -103,7 +107,7 @@ public class Edge extends Component {
      *
      * @param target new Edge target
      */
-    public void setTarget(String target) {
+    public void setTarget(Object target) {
         this.put("target", target);
     }
 

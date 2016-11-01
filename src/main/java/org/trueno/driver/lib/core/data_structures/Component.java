@@ -58,6 +58,8 @@ public class Component extends JSONObject {
     public Component(JSONObject obj) {
         super();
 
+//        System.out.println("Component --> [" + obj + "]");
+
         /* setting fields */
         this.setId(obj.get("id"));
         this.setProperty(obj.getJSONObject("prop"));

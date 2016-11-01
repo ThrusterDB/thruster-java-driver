@@ -1,4 +1,4 @@
-package org.trueno.driver.lib.core.utils;
+package org.trueno.driver.lib.core.data_structures;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -9,7 +9,7 @@ import org.trueno.driver.lib.core.data_structures.Vertex;
 import java.util.Iterator;
 
 /**
- * Created by ebarsallo on 10/28/16.
+ * @author Edgardo Barsallo Yi (ebarsallo)
  */
 public class ComponentHelper {
 
@@ -17,7 +17,9 @@ public class ComponentHelper {
         JSONArray array = new JSONArray();
 
         for(Iterator it = ((JSONArray)o.get("result")).iterator(); it.hasNext(); ) {
-            Vertex v = new Vertex(toComponent(it.next()), graph);
+            Object obj = it.next();
+//            System.out.println("toVertexArray --> " + obj);
+            Vertex v = new Vertex(toComponent(obj), graph);
             array.put(v);
         }
         return array;
@@ -27,7 +29,9 @@ public class ComponentHelper {
         JSONArray array = new JSONArray();
 
         for(Iterator it = ((JSONArray)o.get("result")).iterator(); it.hasNext(); ) {
-            Edge e = new Edge(toComponent(it.next()), graph);
+            Object obj = it.next();
+//            System.out.println("toEdgeArray --> " + obj);
+            Edge e = new Edge(toComponent(obj), graph);
             array.put(e);
         }
         return array;
