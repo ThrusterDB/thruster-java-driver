@@ -47,6 +47,18 @@ public class Graph extends Component {
     }
 
     /**
+     * Overloaded constructor. Allows to pass by parameter a Graph, Vertex or Edge already instantiated.
+     *
+     * @param obj JSONObject with preset keys id, prop (properties), meta and comp (computed).
+     */
+    public Graph(JSONObject obj) {
+        super(obj);
+
+        this.setType(ComponentType.GRAPH);
+        this.setParentGraph(this);
+    }
+
+    /**
      * Returns whether the driver is sending bulk transactions to the remote Trueno DB.
      *
      * @return true if bulk is enabled, false otherwise.
@@ -89,6 +101,13 @@ public class Graph extends Component {
      */
     public void setConn(RPC conn) {
         this.conn = conn;
+    }
+
+    /**
+     * Close the RPC connection
+     */
+    public void close() {
+        this.conn.disconnect();
     }
 
     /**
@@ -258,6 +277,8 @@ public class Graph extends Component {
 
             JSONObject payload = new JSONObject();
 
+            Filter filter = this.filter().term("label", this.getLabel());
+            payload.put("ftr", filter.getFilters());
             payload.put("graph", this.getLabel());
             payload.put("type", ComponentType.GRAPH.toString());
             payload.put("mask", true);
@@ -268,7 +289,8 @@ public class Graph extends Component {
             log.debug("{} – {}", apiFunc, msg.toString(2));
 
             this.conn.call(apiFunc, msg).then(message -> {
-                deferred.resolve(new Graph(((JSONObject)message.getJSONArray("result").get(1)).get("_source").toString()));
+                /* resolve the first position of the array */
+                deferred.resolve((Graph) ComponentHelper.toGraphArray(message).get(0));
             }, deferred::reject);
         }
 

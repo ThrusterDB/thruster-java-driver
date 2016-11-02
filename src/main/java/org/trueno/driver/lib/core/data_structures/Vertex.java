@@ -139,6 +139,7 @@ public class Vertex extends Component {
                         JSONArray vertices = ComponentHelper.toVertexArray(message, this.getParentGraph());
                         deferred.resolve(vertices);
                         break;
+
                     case EDGE:
                         JSONArray edges = ComponentHelper.toEdgeArray(message, this.getParentGraph());
                         deferred.resolve(edges);

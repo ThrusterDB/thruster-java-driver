@@ -37,12 +37,22 @@ public class ComponentHelper {
         return array;
     }
 
+    public static JSONArray toGraphArray (JSONObject o) {
+        JSONArray array = new JSONArray();
+
+        for(Iterator it = ((JSONArray)o.get("result")).iterator(); it.hasNext(); ) {
+            Object obj = it.next();
+            Graph g = new Graph(toComponent(obj));
+            array.put(g);
+        }
+        return array;
+    }
+
     public static JSONObject toComponent (Object o) {
         JSONObject source = (JSONObject)o;
         JSONObject element = ((JSONObject) source.get("_source"));
         /* set identifier if not present */
-        if (element.isNull("id") && !source.isNull("_id")) element.put("id", source.get("_id"));
+        if (!element.has("id") && !source.isNull("_id")) element.put("id", source.get("_id"));
         return element;
-
     }
 }
