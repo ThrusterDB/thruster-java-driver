@@ -77,7 +77,7 @@ public class Component extends JSONObject {
      * @return the ID of this Component
      */
     public Object getId() {
-        return this.get("id").toString();
+        return this.get("id");
     }
 
     /**
